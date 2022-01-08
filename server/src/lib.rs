@@ -1,7 +1,5 @@
-mod extractors;
-
-mod auth;
 pub mod clerk;
+mod extractors;
 mod fulfillment;
 pub mod homie;
 pub mod mailer;
@@ -39,13 +37,6 @@ pub fn app(state: State) -> Router<hyper::Body> {
 
     Router::new()
         .route("/health_check", get(health_check))
-        .nest(
-            "/auth",
-            Router::new()
-                .route("/login", post(auth::login::handle))
-                .route("/refresh", post(auth::refresh::handle))
-                .route("/whoami", get(auth::whoami::handle)),
-        )
         .nest(
             "/oauth",
             Router::new()
