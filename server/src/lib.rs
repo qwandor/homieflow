@@ -166,40 +166,4 @@ mod test_utils {
             homie: None,
         }
     }
-
-    #[allow(dead_code)]
-    pub fn get_structure() -> Structure {
-        Structure {
-            id: structure::ID::new_v4(),
-            name: "test-home".to_string(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_room(structure: &Structure) -> Room {
-        Room {
-            id: room::ID::new_v4(),
-            structure_id: structure.id.clone(),
-            name: "test-garage".to_string(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_device(room: &Room) -> Device {
-        use semver::Version;
-
-        Device {
-            id: device::ID::new_v4(),
-            room_id: room.id.clone(),
-            password_hash: Some("$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU".into()),
-            device_type: device::Type::Gate,
-            traits: vec![],
-            name: String::from("SuperTestingGate"),
-            will_push_state: true,
-            model: String::from("gate-1200"),
-            hw_version: Version::new(1, 0, 0),
-            sw_version: Version::new(1, 0, 1),
-            attributes: Default::default(),
-        }
-    }
 }
