@@ -6,14 +6,11 @@ use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
 use homie_controller::Device;
-use houseflow_types::device;
 use houseflow_types::errors::InternalError;
-use houseflow_types::lighthouse;
 use houseflow_types::user;
 use serde_json::Map;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::str::FromStr;
 
 #[tracing::instrument(name = "Query", skip(state), err)]
 pub async fn handle(
@@ -21,16 +18,20 @@ pub async fn handle(
     user_id: user::ID,
     payload: &request::Payload,
 ) -> Result<response::Payload, InternalError> {
-    let devices = if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
-        get_homie_devices(&homie_controller.devices(), &payload.devices)
+    if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
+        let devices = get_homie_devices(&homie_controller.devices(), &payload.devices);
+        Ok(response::Payload {
+            error_code: None,
+            debug_string: None,
+            devices,
+        })
     } else {
-        get_lighthouse_devices(&state, &user_id, &payload.devices).await?
-    };
-    Ok(response::Payload {
-        error_code: None,
-        debug_string: None,
-        devices,
-    })
+        Ok(response::Payload {
+            error_code: Some("authFailure".to_string()),
+            debug_string: Some("No such user".to_string()),
+            devices: HashMap::new(),
+        })
+    }
 }
 
 fn get_homie_devices(
@@ -107,69 +108,4 @@ fn get_homie_device(
             error_code: Some("deviceNotFound".to_string()),
         }
     }
-}
-
-async fn get_lighthouse_devices(
-    state: &State,
-    user_id: &user::ID,
-    devices: &[request::PayloadDevice],
-) -> Result<HashMap<String, response::PayloadDevice>, InternalError> {
-    let responses = devices.iter().map(|device| async {
-        let response = get_lighthouse_device(state, user_id, device).await?;
-        Ok::<_, InternalError>((device.id.to_owned(), response))
-    });
-    Ok(futures::future::try_join_all(responses)
-        .await?
-        .into_iter()
-        .collect())
-}
-
-async fn get_lighthouse_device(
-    state: &State,
-    user_id: &user::ID,
-    device: &request::PayloadDevice,
-) -> Result<response::PayloadDevice, InternalError> {
-    // TODO: Return error rather than panicking.
-    let device_id = device::ID::from_str(&device.id).expect("invalid device ID");
-
-    if state.config.get_permission(&device_id, user_id).is_none() {
-        return Ok(response::PayloadDevice {
-            status: response::PayloadDeviceStatus::Error,
-            state: Default::default(),
-            error_code: Some(String::from("authFailure")),
-        });
-    }
-    let session = match state.sessions.get(&device_id) {
-        Some(session) => session.clone(),
-        None => {
-            return Ok(response::PayloadDevice {
-                state: Default::default(),
-                status: response::PayloadDeviceStatus::Offline,
-                error_code: Some(String::from("offline")),
-            })
-        }
-    };
-
-    let request = lighthouse::query::Frame {};
-    let response =
-        match tokio::time::timeout(crate::fulfillment::EXECUTE_TIMEOUT, session.query(request))
-            .await
-        {
-            Ok(val) => val?,
-            Err(_) => {
-                return Ok(response::PayloadDevice {
-                    status: response::PayloadDeviceStatus::Offline,
-                    state: Default::default(),
-                    error_code: Some(String::from("offline")),
-                })
-            }
-        };
-
-    tracing::info!(state = %serde_json::to_string(&response.state).unwrap(), "Queried device state");
-
-    Ok(response::PayloadDevice {
-        status: response::PayloadDeviceStatus::Success,
-        error_code: None,
-        state: response.state,
-    })
 }

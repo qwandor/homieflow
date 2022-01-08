@@ -80,7 +80,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clerk = Clerk::new(defaults::clerk_path())?;
     let state = houseflow_server::State {
         config: Arc::new(config),
-        sessions: Default::default(),
         mailer: Arc::new(mailer),
         clerk: Arc::new(clerk),
         homie_controllers: Arc::new(homie_controllers),

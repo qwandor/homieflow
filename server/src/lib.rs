@@ -4,15 +4,12 @@ mod auth;
 pub mod clerk;
 mod fulfillment;
 pub mod homie;
-mod lighthouse;
 pub mod mailer;
 mod oauth;
 
 use axum::Router;
-use dashmap::DashMap;
 use homie_controller::HomieController;
 use houseflow_config::server::Config;
-use houseflow_types::device;
 use houseflow_types::user;
 use mailer::Mailer;
 use std::collections::HashMap;
@@ -27,7 +24,6 @@ pub struct State {
     pub clerk: Arc<dyn clerk::Clerk>,
     pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
-    pub sessions: Arc<DashMap<device::ID, lighthouse::Session>>,
     pub homie_controllers: Arc<HashMap<user::ID, Arc<HomieController>>>,
 }
 
@@ -60,19 +56,7 @@ pub fn app(state: State) -> Router<hyper::Body> {
         )
         .nest(
             "/fulfillment",
-            Router::new()
-                .nest(
-                    "/internal",
-                    Router::new()
-                        .route("/execute", post(fulfillment::internal::execute::handle))
-                        .route("/query", post(fulfillment::internal::query::handle))
-                        .route("/sync", get(fulfillment::internal::sync::handle)),
-                )
-                .route("/google-home", post(fulfillment::ghome::handle)),
-        )
-        .nest(
-            "/lighthouse",
-            Router::new().route("/ws", get(lighthouse::connect::handle)),
+            Router::new().route("/google-home", post(fulfillment::ghome::handle)),
         )
         .layer(axum::AddExtensionLayer::new(state))
         .layer(
@@ -161,14 +145,12 @@ mod test_utils {
             permissions,
         };
 
-        let sessions = Default::default();
         let clerk_path =
             std::env::temp_dir().join(format!("houseflow-clerk-test-{}", rand::random::<u32>()));
 
         extract::Extension(State {
             config: Arc::new(config),
             mailer: Arc::new(FakeMailer::new(tx.clone())),
-            sessions,
             clerk: Arc::new(Clerk::new_temporary(clerk_path).unwrap()),
             homie_controllers: Arc::new(HashMap::new()),
         })
