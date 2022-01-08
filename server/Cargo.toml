@@ -17,9 +17,6 @@ houseflow-types = { path = "../types", version = "0.1.1", features = [
     "askama",
     "axum",
     "token",
-    "auth",
-    "fulfillment",
-    "lighthouse",
 ] }
 houseflow-config = { path = "../config", version = "0.1.1", features = [
     "server",

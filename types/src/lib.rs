@@ -8,15 +8,6 @@ pub mod user;
 pub mod code;
 pub mod errors;
 
-#[cfg(feature = "auth")]
-pub mod auth;
-
-#[cfg(feature = "fulfillment")]
-pub mod fulfillment;
-
-#[cfg(feature = "lighthouse")]
-pub mod lighthouse;
-
 #[cfg(feature = "token")]
 pub mod token;
 
