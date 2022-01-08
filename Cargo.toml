@@ -1,10 +1,6 @@
 [workspace]
 members = [
-  "api",
-  "cli",
   "config",
-  "device",
-  "boards/anyos",
   "google-smart-home",
   "server",
   "types",
