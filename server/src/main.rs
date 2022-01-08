@@ -1,10 +1,8 @@
 use axum_server::tls_rustls;
 use homie_controller::HomieController;
-use houseflow_config::defaults;
 use houseflow_config::server::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
-use houseflow_server::clerk::sled::Clerk;
 use houseflow_server::homie::get_mqtt_options;
 use houseflow_server::homie::spawn_homie_poller;
 use houseflow_server::mailer;
@@ -77,11 +75,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let clerk = Clerk::new(defaults::clerk_path())?;
     let state = houseflow_server::State {
         config: Arc::new(config),
         mailer: Arc::new(mailer),
-        clerk: Arc::new(clerk),
         homie_controllers: Arc::new(homie_controllers),
     };
 
