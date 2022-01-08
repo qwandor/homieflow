@@ -18,10 +18,7 @@ rand = "0.8"
 thiserror = "1.0"
 bytes = "1"
 semver = { version = "1.0.3", features = ["serde"] }
-
-
 strum = { version = "0.23.0", features = ["derive"] }
-
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.64" }
 
@@ -32,7 +29,7 @@ chrono = { version = "0.4.19", features = ["serde"], optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 jsonwebtoken = { version = "7.2.0", optional = true }
 
-askama = { version = "0.10.5", optional = true }
+askama = { version = "0.11.0", optional = true }
 
 axum_crate = { package = "axum", version = "0.3.4", optional = true }
 http = { version = "0.2.4", optional = true }
