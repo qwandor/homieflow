@@ -60,13 +60,6 @@ impl From<TokenError> for ServerError {
     }
 }
 
-#[cfg(feature = "validator")]
-impl From<validator::ValidationErrors> for ServerError {
-    fn from(errors: validator::ValidationErrors) -> Self {
-        Self::ValidationError(errors.to_string())
-    }
-}
-
 #[cfg(feature = "askama")]
 impl From<askama::Error> for InternalError {
     fn from(e: askama::Error) -> Self {
