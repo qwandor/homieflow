@@ -1,14 +1,10 @@
 mod auth;
-mod fulfillment;
 mod internal;
-mod lighthouse;
 mod oauth;
 mod token;
 
 pub use auth::Error as AuthError;
-pub use fulfillment::Error as FulfillmentError;
 pub use internal::Error as InternalError;
-pub use lighthouse::Error as LighthouseError;
 pub use oauth::Error as OAuthError;
 pub use token::Error as TokenError;
 
@@ -32,10 +28,6 @@ pub enum ServerError {
     AuthError(#[from] AuthError),
     #[error("oauth error: {0}")]
     OAuthError(#[from] OAuthError),
-    #[error("fulfillment error: {0}")]
-    FulfillmentError(#[from] FulfillmentError),
-    #[error("lighthouse error: {0}")]
-    LighthouseError(#[from] LighthouseError),
 }
 
 #[cfg(feature = "axum")]
@@ -64,13 +56,6 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },
             Self::OAuthError(_) => StatusCode::BAD_REQUEST,
-            Self::FulfillmentError(ref err) => match err {
-                FulfillmentError::DeviceNotConnected => StatusCode::NOT_ACCEPTABLE,
-                FulfillmentError::Timeout => StatusCode::REQUEST_TIMEOUT,
-            },
-            Self::LighthouseError(ref err) => match err {
-                LighthouseError::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
-            },
         };
         let mut response = axum_crate::Json(self).into_response();
         *response.status_mut() = status;
