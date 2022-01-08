@@ -50,7 +50,6 @@ pub fn app(state: State) -> Router<hyper::Body> {
             "/oauth",
             Router::new()
                 .route("/authorize", get(oauth::authorize::handle))
-                .route("/login", post(oauth::login::handle))
                 .route("/google_login", post(oauth::google_login::handle))
                 .route("/token", post(oauth::token::handle)),
         )
