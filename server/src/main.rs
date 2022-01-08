@@ -5,7 +5,6 @@ use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_server::homie::get_mqtt_options;
 use houseflow_server::homie::spawn_homie_poller;
-use houseflow_server::mailer;
 use rustls::ClientConfig;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -34,18 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let mailer = match config.email.url.scheme() {
-        "smtp" => mailer::smtp::Mailer::new(mailer::smtp::Config {
-            host: config.email.url.host_str().unwrap().to_string(),
-            port: config.email.url.port().unwrap_or(465),
-            username: config.email.url.username().to_string(),
-            password: urlencoding::decode(&config.email.url.password().unwrap().to_string())
-                .unwrap()
-                .to_string(),
-            from: config.email.from.clone(),
-        }),
-        scheme => panic!("unexpected email URL scheme: {}", scheme),
-    };
 
     let mut homie_controllers = HashMap::new();
     let mut join_handles = Vec::new();
@@ -77,7 +64,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = houseflow_server::State {
         config: Arc::new(config),
-        mailer: Arc::new(mailer),
         homie_controllers: Arc::new(homie_controllers),
     };
 

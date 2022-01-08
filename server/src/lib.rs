@@ -1,14 +1,12 @@
 mod extractors;
 mod fulfillment;
 pub mod homie;
-pub mod mailer;
 mod oauth;
 
 use axum::Router;
 use homie_controller::HomieController;
 use houseflow_config::server::Config;
 use houseflow_types::user;
-use mailer::Mailer;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -18,7 +16,6 @@ async fn health_check() -> &'static str {
 
 #[derive(Clone)]
 pub struct State {
-    pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
     pub homie_controllers: Arc<HashMap<user::ID, Arc<HomieController>>>,
 }
