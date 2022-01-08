@@ -20,8 +20,6 @@ use serde::Serialize;
 pub enum ServerError {
     #[error("internal error: {0}")]
     InternalError(#[from] InternalError),
-    #[error("too many requests, please slow down")]
-    TooManyRequests,
     #[error("validation error: {0}")]
     ValidationError(String),
     #[error("auth error: {0}")]
@@ -39,19 +37,11 @@ impl axum_crate::response::IntoResponse for ServerError {
     fn into_response(self) -> http::Response<Self::Body> {
         use http::StatusCode;
         let status = match self {
-            Self::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::AuthError(ref err) => match err {
                 AuthError::InvalidAuthorizationHeader(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidToken(_) => StatusCode::UNAUTHORIZED,
-                AuthError::InvalidPassword => StatusCode::UNAUTHORIZED,
-                AuthError::UserNotFound => StatusCode::BAD_REQUEST,
-                AuthError::DeviceNotFound => StatusCode::BAD_REQUEST,
-                AuthError::UserAlreadyExists => StatusCode::NOT_ACCEPTABLE,
-                AuthError::RefreshTokenBlacklisted => StatusCode::UNAUTHORIZED,
-                AuthError::NoDevicePermission => StatusCode::UNAUTHORIZED,
-                AuthError::InvalidVerificationCode(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidGoogleJwt(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },
