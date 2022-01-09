@@ -1,6 +1,5 @@
 [workspace]
 members = [
-  "config",
   "google-smart-home",
   "server",
   "types",

@@ -1,8 +1,8 @@
 use axum_server::tls_rustls;
 use homie_controller::HomieController;
-use houseflow_config::server::Config;
-use houseflow_config::Config as _;
-use houseflow_config::Error as ConfigError;
+use houseflow_server::config::server::Config;
+use houseflow_server::config::Config as _;
+use houseflow_server::config::Error as ConfigError;
 use houseflow_server::homie::get_mqtt_options;
 use houseflow_server::homie::spawn_homie_poller;
 use rustls::ClientConfig;
@@ -14,7 +14,7 @@ use std::sync::Arc;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     const HIDE_TIMESTAMP_ENV: &str = "HOUSEFLOW_SERVER_HIDE_TIMESTAMP";
 
-    houseflow_config::init_logging(std::env::var_os(HIDE_TIMESTAMP_ENV).is_some());
+    houseflow_server::config::init_logging(std::env::var_os(HIDE_TIMESTAMP_ENV).is_some());
     let config_path = std::env::var("HOUSEFLOW_SERVER_CONFIG")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| Config::default_path());

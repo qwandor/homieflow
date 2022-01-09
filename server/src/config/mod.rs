@@ -1,6 +1,4 @@
 pub mod defaults;
-
-#[cfg(any(test, feature = "server"))]
 pub mod server;
 
 pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
@@ -15,7 +13,6 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         Ok(())
     }
 
-    #[cfg(feature = "fs")]
     fn write_defaults(path: impl AsRef<std::path::Path>) -> Result<(), Error> {
         use std::io::Write;
 
@@ -61,7 +58,6 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         Ok(config)
     }
 
-    #[cfg(feature = "fs")]
     fn read(path: impl AsRef<std::path::Path>) -> Result<Self, Error> {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)?;

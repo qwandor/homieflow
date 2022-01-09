@@ -2,10 +2,10 @@ pub mod authorize;
 pub mod google_login;
 pub mod token;
 
+use crate::config::server::Google;
+use crate::config::server::Secrets;
 use chrono::Duration;
 use chrono::Utc;
-use houseflow_config::server::Google;
-use houseflow_config::server::Secrets;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::TokenError;
 use houseflow_types::token::AuthorizationCode;

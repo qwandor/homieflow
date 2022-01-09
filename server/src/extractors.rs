@@ -1,7 +1,7 @@
+use crate::config::server::Secrets;
 use crate::State;
 use async_trait::async_trait;
 use axum::body::Body;
-use houseflow_config::server::Secrets;
 use houseflow_types::errors::AuthError;
 use houseflow_types::errors::ServerError;
 use houseflow_types::errors::TokenError;

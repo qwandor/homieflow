@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::config::server::Config;
 use crate::State;
 use google_smart_home::device::Trait as GHomeDeviceTrait;
 use google_smart_home::device::Type as GHomeDeviceType;
@@ -8,7 +9,6 @@ use google_smart_home::sync::response::PayloadDevice;
 use homie_controller::ColorFormat;
 use homie_controller::Device;
 use homie_controller::Node;
-use houseflow_config::server::Config;
 use houseflow_types::device::Trait as DeviceTrait;
 use houseflow_types::device::Type as DeviceType;
 use houseflow_types::errors::InternalError;

@@ -1,4 +1,4 @@
-use crate::defaults;
+use super::defaults;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -125,7 +125,7 @@ pub struct GoogleLogin {
     pub client_id: String,
 }
 
-impl crate::Config for Config {
+impl super::Config for Config {
     const DEFAULT_TOML: &'static str = include_str!("default.toml");
 
     const DEFAULT_FILE: &'static str = "server.toml";
@@ -297,7 +297,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Config as _;
+    use super::super::Config as _;
 
     use semver::Version;
     use std::str::FromStr;
