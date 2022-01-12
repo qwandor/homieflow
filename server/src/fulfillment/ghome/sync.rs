@@ -58,7 +58,6 @@ fn config_devices_to_google_home(
                     DeviceType::Garage => GHomeDeviceType::Garage,
                     DeviceType::Gate => GHomeDeviceType::Gate,
                     DeviceType::Light => GHomeDeviceType::Light,
-                    _ => todo!(),
                 },
                 traits: device
                     .traits
@@ -66,7 +65,6 @@ fn config_devices_to_google_home(
                     .map(|t| match t {
                         DeviceTrait::OnOff => GHomeDeviceTrait::OnOff,
                         DeviceTrait::OpenClose => GHomeDeviceTrait::OpenClose,
-                        _ => todo!(),
                     })
                     .collect(),
                 name: response::PayloadDeviceName {

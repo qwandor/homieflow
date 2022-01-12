@@ -8,7 +8,6 @@ use strum::IntoStaticStr;
 use uuid::Uuid;
 
 pub type ID = Uuid;
-pub type Password = String;
 pub type PasswordHash = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -98,22 +97,6 @@ impl Type {
 pub enum Command {
     OnOff(commands::OnOff),
     OpenClose(commands::OpenClose),
-}
-
-impl Command {
-    pub fn is_supported(&self, t: &[Trait]) -> bool {
-        let required_traits = match self {
-            Command::OnOff(_) => &[Trait::OnOff],
-            Command::OpenClose(_) => &[Trait::OpenClose],
-        };
-
-        for required_trait in required_traits {
-            if !t.contains(required_trait) {
-                return false;
-            }
-        }
-        true
-    }
 }
 
 pub mod commands {
