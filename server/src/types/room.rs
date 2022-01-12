@@ -1,4 +1,4 @@
-use crate::structure;
+use super::structure;
 use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;

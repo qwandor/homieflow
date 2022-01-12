@@ -1,18 +1,18 @@
+use crate::types::client::Client;
+use crate::types::errors::InternalError;
+use crate::types::errors::OAuthError;
+use crate::types::errors::ServerError;
+use crate::types::token::AccessToken;
+use crate::types::token::AccessTokenPayload;
+use crate::types::token::AuthorizationCode;
+use crate::types::token::RefreshToken;
+use crate::types::token::RefreshTokenPayload;
 use crate::State;
 use axum::extract::Extension;
 use axum::extract::Form;
 use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
-use houseflow_types::client::Client;
-use houseflow_types::errors::InternalError;
-use houseflow_types::errors::OAuthError;
-use houseflow_types::errors::ServerError;
-use houseflow_types::token::AccessToken;
-use houseflow_types::token::AccessTokenPayload;
-use houseflow_types::token::AuthorizationCode;
-use houseflow_types::token::RefreshToken;
-use houseflow_types::token::RefreshTokenPayload;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -51,7 +51,7 @@ pub struct Response {
     pub token_type: TokenType,
 
     /// If the access token expires, the server should reply with the duration of time the access token is granted for.
-    #[serde(with = "houseflow_types::serde_token_expiration")]
+    #[serde(with = "crate::types::serde_token_expiration")]
     pub expires_in: Option<Duration>,
 }
 
@@ -172,7 +172,7 @@ pub async fn handle(
 
 // #[cfg(test)]
 // mod tests {
-//     use houseflow_types::token::AuthorizationCodePayload;
+//     use crate::types::token::AuthorizationCodePayload;
 //
 //     use super::*;
 //     use crate::test_utils::*;
@@ -287,7 +287,7 @@ pub async fn handle(
 //     }
 //
 //     mod authorization_code_grant {
-//         use houseflow_types::token::AuthorizationCodePayload;
+//         use crate::types::token::AuthorizationCodePayload;
 //
 //         use super::*;
 //

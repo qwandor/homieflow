@@ -1,4 +1,4 @@
-use crate::room;
+use super::room;
 use semver::Version;
 use serde::Deserialize;
 use serde::Serialize;

@@ -8,10 +8,8 @@ pub mod user;
 pub mod code;
 pub mod errors;
 
-#[cfg(feature = "token")]
 pub mod token;
 
-#[cfg(feature = "token")]
 pub mod serde_token_expiration {
     use chrono::Duration;
     use serde::de;

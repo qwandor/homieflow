@@ -4,13 +4,13 @@ mod query;
 mod sync;
 
 use crate::extractors::UserID;
+use crate::types::errors::ServerError;
 use crate::State;
 use axum::extract::Extension;
 use axum::Json;
 use google_smart_home::Request;
 use google_smart_home::RequestInput;
 use google_smart_home::Response;
-use houseflow_types::errors::ServerError;
 
 #[tracing::instrument(name = "GHome", skip(state), err)]
 pub async fn handle(

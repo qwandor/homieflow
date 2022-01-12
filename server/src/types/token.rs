@@ -1,4 +1,4 @@
-use crate::errors::TokenError as Error;
+use super::errors::TokenError as Error;
 use chrono::DateTime;
 use chrono::Utc;
 use jsonwebtoken::dangerous_insecure_decode_with_validation;

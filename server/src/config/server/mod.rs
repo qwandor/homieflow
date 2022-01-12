@@ -2,11 +2,11 @@ use super::defaults;
 use serde::Deserialize;
 use serde::Serialize;
 
-use houseflow_types::device;
-use houseflow_types::permission;
-use houseflow_types::room;
-use houseflow_types::structure;
-use houseflow_types::user;
+use crate::types::device;
+use crate::types::permission;
+use crate::types::room;
+use crate::types::structure;
+use crate::types::user;
 
 use device::Device;
 use permission::Permission;
@@ -296,18 +296,18 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::Config as _;
+    use super::*;
 
     use semver::Version;
     use std::str::FromStr;
     use url::Url;
 
-    use houseflow_types::device;
-    use houseflow_types::permission;
-    use houseflow_types::room;
-    use houseflow_types::structure;
-    use houseflow_types::user;
+    use crate::types::device;
+    use crate::types::permission;
+    use crate::types::room;
+    use crate::types::structure;
+    use crate::types::user;
 
     use device::Device;
     use permission::Permission;

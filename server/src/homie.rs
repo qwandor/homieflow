@@ -1,8 +1,8 @@
+use crate::types::user::Homie;
 use homie_controller::Event;
 use homie_controller::HomieController;
 use homie_controller::HomieEventLoop;
 use homie_controller::PollError;
-use houseflow_types::user::Homie;
 use rumqttc::ClientConfig;
 use rumqttc::ConnectionError;
 use rumqttc::MqttOptions;

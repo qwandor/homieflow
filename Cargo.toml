@@ -2,6 +2,5 @@
 members = [
   "google-smart-home",
   "server",
-  "types",
 ]
 resolver = "2"

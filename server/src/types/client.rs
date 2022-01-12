@@ -1,3 +1,4 @@
+use chrono::Duration;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -9,10 +10,6 @@ pub enum Client {
     GoogleHome,
 }
 
-#[cfg(feature = "token")]
-use chrono::Duration;
-
-#[cfg(feature = "token")]
 impl Client {
     pub fn refresh_token_duration(&self) -> Option<Duration> {
         match *self {

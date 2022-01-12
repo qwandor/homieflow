@@ -4,13 +4,13 @@ pub mod token;
 
 use crate::config::server::Google;
 use crate::config::server::Secrets;
+use crate::types::errors::OAuthError;
+use crate::types::errors::TokenError;
+use crate::types::token::AuthorizationCode;
+use crate::types::token::AuthorizationCodePayload;
+use crate::types::user::ID as UserID;
 use chrono::Duration;
 use chrono::Utc;
-use houseflow_types::errors::OAuthError;
-use houseflow_types::errors::TokenError;
-use houseflow_types::token::AuthorizationCode;
-use houseflow_types::token::AuthorizationCodePayload;
-use houseflow_types::user::ID as UserID;
 use serde::Deserialize;
 use serde::Serialize;
 use url::Url;

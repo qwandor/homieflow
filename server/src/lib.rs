@@ -3,11 +3,12 @@ mod extractors;
 mod fulfillment;
 pub mod homie;
 mod oauth;
+mod types;
 
+use crate::types::user;
 use axum::Router;
 use config::server::Config;
 use homie_controller::HomieController;
-use houseflow_types::user;
 use std::collections::HashMap;
 use std::sync::Arc;
 

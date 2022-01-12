@@ -1,13 +1,13 @@
 use super::verify_redirect_uri;
 use super::AuthorizationRequestQuery;
+use crate::types::errors::InternalError;
+use crate::types::errors::OAuthError;
+use crate::types::errors::ServerError;
 use crate::State;
 use askama::Template;
 use axum::extract::Extension;
 use axum::extract::Query;
 use axum::response::Html;
-use houseflow_types::errors::InternalError;
-use houseflow_types::errors::OAuthError;
-use houseflow_types::errors::ServerError;
 use http::HeaderMap;
 use url::Url;
 

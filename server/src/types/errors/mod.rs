@@ -28,11 +28,10 @@ pub enum ServerError {
     OAuthError(#[from] OAuthError),
 }
 
-#[cfg(feature = "axum")]
-impl axum_crate::response::IntoResponse for ServerError {
-    type Body = http_body::Full<hyper::body::Bytes>;
+impl axum::response::IntoResponse for ServerError {
+    type Body = axum::body::Full<hyper::body::Bytes>;
 
-    type BodyError = <Self::Body as axum_crate::body::HttpBody>::Error;
+    type BodyError = <Self::Body as axum::body::HttpBody>::Error;
 
     fn into_response(self) -> http::Response<Self::Body> {
         use http::StatusCode;
@@ -47,7 +46,7 @@ impl axum_crate::response::IntoResponse for ServerError {
             },
             Self::OAuthError(_) => StatusCode::BAD_REQUEST,
         };
-        let mut response = axum_crate::Json(self).into_response();
+        let mut response = axum::Json(self).into_response();
         *response.status_mut() = status;
 
         response
@@ -60,14 +59,12 @@ impl From<TokenError> for ServerError {
     }
 }
 
-#[cfg(feature = "askama")]
 impl From<askama::Error> for InternalError {
     fn from(e: askama::Error) -> Self {
         Self::Template(e.to_string())
     }
 }
 
-#[cfg(feature = "askama")]
 impl From<askama::Error> for ServerError {
     fn from(e: askama::Error) -> Self {
         Self::InternalError(e.into())
