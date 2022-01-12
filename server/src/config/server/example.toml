@@ -33,9 +33,7 @@ name = "Bedroom"
 
 [[users]]
 id = "861ccceaa3e349138ce2498768dbfe09"
-username = "gbaranski"
 email = "root@gbaranski.com"
-admin = false
 
 [[permissions]]
 structure-id = "bd7feab5033940e296ed7fcdc700ba65"

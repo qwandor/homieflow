@@ -264,9 +264,7 @@ mod tests {
             .to_vec(),
             users: [User {
                 id: user::ID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
-                username: String::from("gbaranski"),
                 email: String::from("root@gbaranski.com"),
-                admin: false,
                 homie: None,
             }]
             .to_vec(),

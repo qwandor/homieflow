@@ -10,12 +10,8 @@ pub type ID = Uuid;
 pub struct User {
     /// Unique ID of the user
     pub id: ID,
-    /// Name of the user
-    pub username: String,
     /// Email of the user
     pub email: String,
-    /// True if the user is admin.
-    pub admin: bool,
     /// Homie controller for the user.
     #[serde(default)]
     pub homie: Option<Homie>,
