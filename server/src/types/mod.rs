@@ -1,4 +1,3 @@
-pub mod client;
 pub mod device;
 pub mod permission;
 pub mod room;

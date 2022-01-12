@@ -1,4 +1,3 @@
-use crate::types::client::Client;
 use crate::types::errors::InternalError;
 use crate::types::errors::OAuthError;
 use crate::types::errors::ServerError;
@@ -15,6 +14,8 @@ use chrono::Duration;
 use chrono::Utc;
 use serde::Deserialize;
 use serde::Serialize;
+
+const GOOGLE_HOME_ACCESS_TOKEN_DURATION_MINUTES: i64 = 10;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "grant_type", rename_all = "snake_case")]
@@ -74,7 +75,7 @@ async fn on_refresh_token_grant(
 
     tracing::info!(user_id = %refresh_token.claims.sub, "Refresh token grant");
 
-    let expires_in = Client::GoogleHome.access_token_duration();
+    let expires_in = Duration::minutes(GOOGLE_HOME_ACCESS_TOKEN_DURATION_MINUTES);
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
