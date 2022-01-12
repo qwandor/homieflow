@@ -61,11 +61,11 @@ pub struct Network {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Secrets {
-    /// Key used to sign refresh tokens. Must be secret and should be farily random.
+    /// Key used to sign refresh tokens. Must be secret and should be fairly random.
     pub refresh_key: String,
-    /// Key used to sign access tokens. Must be secret and should be farily random.
+    /// Key used to sign access tokens. Must be secret and should be fairly random.
     pub access_key: String,
-    /// Key used to sign authorization codes. Must be secret and should be farily random.
+    /// Key used to sign authorization codes. Must be secret and should be fairly random.
     pub authorization_code_key: String,
 }
 
