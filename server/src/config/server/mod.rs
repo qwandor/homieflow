@@ -26,8 +26,6 @@ pub struct Config {
     /// Path to the TLS configuration
     #[serde(default)]
     pub tls: Option<Tls>,
-    /// Configuration of the Email
-    pub email: Email,
     /// Configuration of the Google 3rd party client
     #[serde(default)]
     pub google: Option<Google>,
@@ -89,15 +87,6 @@ pub struct Tls {
     pub certificate: std::path::PathBuf,
     /// Path to the TLS private key
     pub private_key: std::path::PathBuf,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Email {
-    /// URL of the email server
-    pub url: Url,
-    /// E-Mail from which to send emails
-    pub from: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -172,21 +161,6 @@ impl super::Config for Config {
             }
         }
 
-        Ok(())
-    }
-
-    fn preprocess(&mut self) -> Result<(), String> {
-        if self.email.url.port().is_none() {
-            let scheme = self.email.url.scheme();
-            let port = match scheme {
-                "smtp" => defaults::smtp_port(),
-                _ => return Err(format!("unexpected email URL scheme: {}", scheme)),
-            };
-            self.email.url.set_port(Some(port)).unwrap();
-        }
-        if self.email.url.password().is_none() {
-            return Err("missing email URL password".to_string());
-        }
         Ok(())
     }
 }
@@ -334,10 +308,6 @@ mod tests {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 2, 3, 4)),
                 port: 4321,
             }),
-            email: Email {
-                url: Url::from_str("smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666").unwrap(),
-                from: String::from("houseflow@gbaranski.com"),
-            },
             google: Some(Google {
                 client_id: String::from("google-client-id"),
                 client_secret: String::from("google-client-secret"),
@@ -397,8 +367,6 @@ mod tests {
             "AUTHORIZATION_CODE_KEY",
             &expected.secrets.authorization_code_key,
         );
-        std::env::set_var("EMAIL_USERNAME", expected.email.url.username());
-        std::env::set_var("EMAIL_PASSWORD", expected.email.url.password().unwrap());
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()
@@ -508,10 +476,6 @@ mod tests {
             network: Default::default(),
             secrets: rand::random(),
             tls: Default::default(),
-            email: Email {
-                url: Url::parse("smtp://example.com").unwrap(),
-                from: String::new(),
-            },
             google: Default::default(),
             logins: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),

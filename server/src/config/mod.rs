@@ -5,10 +5,6 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     const DEFAULT_TOML: &'static str;
     const DEFAULT_FILE: &'static str;
 
-    fn preprocess(&mut self) -> Result<(), String> {
-        Ok(())
-    }
-
     fn validate(&self) -> Result<(), String> {
         Ok(())
     }
