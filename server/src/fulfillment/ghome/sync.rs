@@ -1,9 +1,5 @@
 use std::collections::HashMap;
 
-use crate::config::server::Config;
-use crate::types::device::Trait as DeviceTrait;
-use crate::types::device::Type as DeviceType;
-use crate::types::errors::InternalError;
 use crate::types::errors::ServerError;
 use crate::types::user;
 use crate::State;
@@ -19,76 +15,29 @@ use serde_json::Value;
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload, ServerError> {
-    let user_devices = if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
-        homie_devices_to_google_home(&homie_controller.devices())
-    } else {
-        config_devices_to_google_home(&state.config, &user_id)?
-    };
+    if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
+        let devices = homie_devices_to_google_home(&homie_controller.devices());
 
-    tracing::info!(
-        "Synced {} devices: {}",
-        user_devices.len(),
-        serde_json::to_string_pretty(&user_devices).unwrap(),
-    );
+        tracing::info!(
+            "Synced {} devices: {}",
+            devices.len(),
+            serde_json::to_string_pretty(&devices).unwrap(),
+        );
 
-    Ok(response::Payload {
-        agent_user_id: user_id.to_string(),
-        error_code: None,
-        debug_string: None,
-        devices: user_devices,
-    })
-}
-
-fn config_devices_to_google_home(
-    config: &Config,
-    user_id: &user::ID,
-) -> Result<Vec<PayloadDevice>, ServerError> {
-    let user_devices = config.get_user_devices(user_id);
-
-    user_devices
-        .into_iter()
-        .map(|device_id| config.get_device(&device_id).unwrap())
-        .map(|device| {
-            let room = config
-                .get_room(&device.room_id)
-                .ok_or_else(|| InternalError::Other("couldn't find matching room".to_string()))?;
-            let payload = response::PayloadDevice {
-                id: device.id.to_string(),
-                device_type: match device.device_type {
-                    DeviceType::Garage => GHomeDeviceType::Garage,
-                    DeviceType::Gate => GHomeDeviceType::Gate,
-                    DeviceType::Light => GHomeDeviceType::Light,
-                },
-                traits: device
-                    .traits
-                    .iter()
-                    .map(|t| match t {
-                        DeviceTrait::OnOff => GHomeDeviceTrait::OnOff,
-                        DeviceTrait::OpenClose => GHomeDeviceTrait::OpenClose,
-                    })
-                    .collect(),
-                name: response::PayloadDeviceName {
-                    default_names: None,
-                    name: device.name,
-                    nicknames: None,
-                },
-                will_report_state: device.will_push_state,
-                notification_supported_by_agent: false, // not sure about that
-                room_hint: Some(room.name),
-                device_info: Some(response::PayloadDeviceInfo {
-                    manufacturer: Some("houseflow".to_string()),
-                    model: None,
-                    hw_version: Some(device.hw_version.to_string()),
-                    sw_version: Some(device.sw_version.to_string()),
-                }),
-                attributes: device.attributes,
-                custom_data: None,
-                other_device_ids: None,
-            };
-
-            Ok::<_, ServerError>(payload)
+        Ok(response::Payload {
+            agent_user_id: user_id.to_string(),
+            error_code: None,
+            debug_string: None,
+            devices,
         })
-        .collect()
+    } else {
+        Ok(response::Payload {
+            agent_user_id: user_id.to_string(),
+            error_code: Some("authFailure".to_string()),
+            debug_string: Some("No such user".to_string()),
+            devices: vec![],
+        })
+    }
 }
 
 fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<PayloadDevice> {
