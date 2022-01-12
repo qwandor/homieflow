@@ -1,4 +1,3 @@
-pub mod device;
 pub mod errors;
 pub mod permission;
 pub mod room;
