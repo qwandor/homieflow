@@ -1,13 +1,10 @@
 pub mod device;
+pub mod errors;
 pub mod permission;
 pub mod room;
 pub mod structure;
-pub mod user;
-
-pub mod code;
-pub mod errors;
-
 pub mod token;
+pub mod user;
 
 pub mod serde_token_expiration {
     use chrono::Duration;
