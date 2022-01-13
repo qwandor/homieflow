@@ -2,19 +2,14 @@ pub mod defaults;
 pub mod server;
 
 use regex::Regex;
-use serde::{
-    de::{self, DeserializeOwned, Visitor},
-    Deserializer, Serialize, Serializer,
-};
+use serde::{de::DeserializeOwned, Serialize};
 use std::{
     env::{self, VarError},
-    fmt::{self, Formatter},
     io::{self, Write},
     path::{Path, PathBuf},
     str::FromStr,
 };
 use tracing::Level;
-use url::Host;
 
 pub trait Config: DeserializeOwned + Serialize {
     const DEFAULT_TOML: &'static str;
@@ -113,39 +108,4 @@ pub fn init_logging(hide_timestamp: bool) {
     } else {
         tracing_subscriber::fmt().with_max_level(level).init()
     };
-}
-
-pub(crate) mod serde_hostname {
-    use super::*;
-
-    pub fn serialize<S>(host: &Host, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(host.to_string().as_str())
-    }
-
-    struct HostnameVisitor;
-
-    impl<'de> Visitor<'de> for HostnameVisitor {
-        type Value = Host;
-
-        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
-            formatter.write_str("valid hostname")
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
-            Host::parse(v).map_err(de::Error::custom)
-        }
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Host, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_str(HostnameVisitor)
-    }
 }
