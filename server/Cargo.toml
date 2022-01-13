@@ -58,3 +58,16 @@ tokio = { version = "1.5", features = [
     "macros",
 ] }
 uuid = { version = "0.8.2", features = ["v4", "serde"] }
+
+[package.metadata.deb]
+section = "net"
+maintainer-scripts = "debian-scripts"
+conf-files = ["/etc/houseflow-server.toml"]
+assets = [
+	["target/release/houseflow-server", "usr/bin/", "755"],
+	["example.toml", "etc/houseflow-server.toml", "640"],
+	["README.md", "usr/share/doc/houseflow-server/", "644"],
+]
+
+# This section needs to be here even if it's empty, for the systemd integration to work.
+[package.metadata.deb.systemd-units]

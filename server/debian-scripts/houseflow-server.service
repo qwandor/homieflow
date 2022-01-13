@@ -1,0 +1,16 @@
+[Unit]
+Description=Google Home to Homie MQTT bridge.
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/etc/
+Environment=RUST_BACKTRACE=1
+Environment=RUST_LIB_BACKTRACE=1
+Environment=HOUSEFLOW_SERVER_CONFIG=/etc/houseflow-server.toml
+ExecStart=/usr/bin/houseflow-server
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
