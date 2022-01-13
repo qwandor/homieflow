@@ -1,10 +1,10 @@
 [package]
 name = "houseflow-server"
 version = "0.1.2"
-description = "Server for Houseflow"
-homepage = "https://github.com/gbaranski/houseflow"
+description = "Google Home to Homie MQTT bridge."
 repository = "https://github.com/gbaranski/houseflow"
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+categories = ["network-programming"]
 keywords = ["iot", "home-automation", "smart-home", "web"]
 license = "GPL-3.0-or-later"
 edition = "2021"
