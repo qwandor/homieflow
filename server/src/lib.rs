@@ -6,11 +6,17 @@ mod oauth;
 mod types;
 
 use crate::types::user;
-use axum::Router;
+use axum::routing::{get, post};
+use axum::{AddExtensionLayer, Router};
 use config::server::Config;
 use homie_controller::HomieController;
+use http::{Request, Response};
+use hyper::Body;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
+use tower_http::trace::TraceLayer;
+use tracing::{debug, debug_span, Span};
 
 async fn health_check() -> &'static str {
     "I'm alive!"
@@ -23,15 +29,6 @@ pub struct State {
 }
 
 pub fn app(state: State) -> Router<hyper::Body> {
-    use axum::routing::get;
-    use axum::routing::post;
-    use http::Request;
-    use http::Response;
-    use hyper::Body;
-    use std::time::Duration;
-    use tower_http::trace::TraceLayer;
-    use tracing::Span;
-
     Router::new()
         .route("/health_check", get(health_check))
         .nest(
@@ -45,11 +42,11 @@ pub fn app(state: State) -> Router<hyper::Body> {
             "/fulfillment",
             Router::new().route("/google-home", post(fulfillment::ghome::handle)),
         )
-        .layer(axum::AddExtensionLayer::new(state))
+        .layer(AddExtensionLayer::new(state))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &Request<Body>| {
-                    tracing::debug_span!(
+                    debug_span!(
                         "Request",
                         status_code = tracing::field::Empty,
                         ms = tracing::field::Empty,
@@ -60,7 +57,7 @@ pub fn app(state: State) -> Router<hyper::Body> {
                     span.record("status_code", &tracing::field::display(response.status()));
                     span.record("ms", &tracing::field::display(latency.as_millis()));
 
-                    tracing::debug!("response processed")
+                    debug!("response processed")
                 }),
         )
 }

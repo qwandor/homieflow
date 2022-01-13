@@ -1,7 +1,22 @@
 pub mod defaults;
 pub mod server;
 
-pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
+use regex::Regex;
+use serde::{
+    de::{self, DeserializeOwned, Visitor},
+    Deserializer, Serialize, Serializer,
+};
+use std::{
+    env::{self, VarError},
+    fmt::{self, Formatter},
+    io::{self, Write},
+    path::{Path, PathBuf},
+    str::FromStr,
+};
+use tracing::Level;
+use url::Host;
+
+pub trait Config: DeserializeOwned + Serialize {
     const DEFAULT_TOML: &'static str;
     const DEFAULT_FILE: &'static str;
 
@@ -9,9 +24,7 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         Ok(())
     }
 
-    fn write_defaults(path: impl AsRef<std::path::Path>) -> Result<(), Error> {
-        use std::io::Write;
-
+    fn write_defaults(path: impl AsRef<Path>) -> Result<(), Error> {
         let path = path.as_ref();
         if path.parent().is_none() || !path.parent().unwrap().exists() {
             let mut comps = path.components();
@@ -24,8 +37,6 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     }
 
     fn parse(s: &str) -> Result<Self, Error> {
-        use regex::Regex;
-
         let re = Regex::new(r"\$\{([a-zA-Z_]+)\}").unwrap();
         let s = re.replace_all(s, |caps: &regex::Captures| {
             let (pos, name) = {
@@ -34,14 +45,14 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
                 let name = name_match.as_str();
                 (pos, name)
             };
-            match std::env::var(name) {
+            match env::var(name) {
                 Ok(env) => env,
-                Err(std::env::VarError::NotPresent) => panic!(
+                Err(VarError::NotPresent) => panic!(
                     "environment variable named {} from configuration file at {} is not defined",
                     name,
                     pos
                 ),
-                Err(std::env::VarError::NotUnicode(_)) => panic!(
+                Err(VarError::NotUnicode(_)) => panic!(
                     "environment variable named {} from configuration file at {} is not valid unicode",
                     name,
                     pos
@@ -54,13 +65,13 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         Ok(config)
     }
 
-    fn read(path: impl AsRef<std::path::Path>) -> Result<Self, Error> {
+    fn read(path: impl AsRef<Path>) -> Result<Self, Error> {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)?;
         Self::parse(&content)
     }
 
-    fn default_path() -> std::path::PathBuf {
+    fn default_path() -> PathBuf {
         xdg::BaseDirectories::with_prefix("houseflow")
             .unwrap()
             .get_config_home()
@@ -71,7 +82,7 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("io: {0}")]
-    IO(#[from] std::io::Error),
+    IO(#[from] io::Error),
     #[error("toml deserialize: {0}")]
     TomlDeserialize(#[from] toml::de::Error),
     #[error("toml serialize: {0}")]
@@ -82,13 +93,11 @@ pub enum Error {
 
 pub fn init_logging(hide_timestamp: bool) {
     const LOG_ENV: &str = "HOUSEFLOW_LOG";
-    use std::str::FromStr;
-    use tracing::Level;
 
-    let env_filter = match std::env::var(LOG_ENV) {
+    let env_filter = match env::var(LOG_ENV) {
         Ok(env) => env,
-        Err(std::env::VarError::NotPresent) => "info".to_string(),
-        Err(std::env::VarError::NotUnicode(_)) => panic!(
+        Err(VarError::NotPresent) => "info".to_string(),
+        Err(VarError::NotUnicode(_)) => panic!(
             "{} environment variable is not valid unicode and can't be read",
             LOG_ENV
         ),
@@ -106,15 +115,9 @@ pub fn init_logging(hide_timestamp: bool) {
     };
 }
 
-#[allow(dead_code)]
 pub(crate) mod serde_hostname {
-    use serde::de;
-    use serde::de::Visitor;
-    use serde::Deserializer;
-    use serde::Serializer;
-    use url::Host;
+    use super::*;
 
-    use std::fmt;
     pub fn serialize<S>(host: &Host, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -127,7 +130,7 @@ pub(crate) mod serde_hostname {
     impl<'de> Visitor<'de> for HostnameVisitor {
         type Value = Host;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
             formatter.write_str("valid hostname")
         }
 

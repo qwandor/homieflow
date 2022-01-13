@@ -1,4 +1,4 @@
-use axum_server::tls_rustls;
+use axum_server::tls_rustls::RustlsConfig;
 use homie_controller::HomieController;
 use houseflow_server::config::server::Config;
 use houseflow_server::config::Config as _;
@@ -7,32 +7,37 @@ use houseflow_server::homie::get_mqtt_options;
 use houseflow_server::homie::spawn_homie_poller;
 use rustls::ClientConfig;
 use std::collections::HashMap;
+use std::env;
+use std::io;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::select;
+use tracing::{debug, error, info};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     const HIDE_TIMESTAMP_ENV: &str = "HOUSEFLOW_SERVER_HIDE_TIMESTAMP";
 
-    houseflow_server::config::init_logging(std::env::var_os(HIDE_TIMESTAMP_ENV).is_some());
-    let config_path = std::env::var("HOUSEFLOW_SERVER_CONFIG")
-        .map(std::path::PathBuf::from)
+    houseflow_server::config::init_logging(env::var_os(HIDE_TIMESTAMP_ENV).is_some());
+    let config_path = env::var("HOUSEFLOW_SERVER_CONFIG")
+        .map(PathBuf::from)
         .unwrap_or_else(|_| Config::default_path());
 
-    tracing::debug!("Config path: {:?}", config_path);
+    debug!("Config path: {:?}", config_path);
 
     let config = match Config::read(&config_path) {
         Ok(config) => config,
         Err(ConfigError::IO(err)) => match err.kind() {
-            std::io::ErrorKind::NotFound => {
-                tracing::error!("Config file could not be found at {:?}", config_path);
+            io::ErrorKind::NotFound => {
+                error!("Config file could not be found at {:?}", config_path);
                 return Ok(());
             }
             _ => panic!("Read config IO Error: {}", err),
         },
         Err(err) => panic!("Config error: {}", err),
     };
-    tracing::debug!("Config: {:#?}", config);
+    debug!("Config: {:#?}", config);
 
     let mut homie_controllers = HashMap::new();
     let mut join_handles = Vec::new();
@@ -72,23 +77,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(tls) = &state.config.tls {
         let fut = axum_server::bind(address)
             .serve(houseflow_server::app(state.clone()).into_make_service());
-        tracing::info!("Starting server at {}", address);
+        info!("Starting server at {}", address);
 
         let tls_address = SocketAddr::new(tls.address, tls.port);
-        let tls_config =
-            tls_rustls::RustlsConfig::from_pem_file(&tls.certificate, &tls.private_key).await?;
+        let tls_config = RustlsConfig::from_pem_file(&tls.certificate, &tls.private_key).await?;
         let tls_fut = axum_server::bind_rustls(tls_address, tls_config)
             .serve(houseflow_server::app(state).into_make_service());
-        tracing::info!("Starting TLS server at {}", tls_address);
+        info!("Starting TLS server at {}", tls_address);
 
-        tokio::select! {
+        select! {
             val = fut => val?,
             val = tls_fut => val?
         };
     } else {
         let fut =
             axum_server::bind(address).serve(houseflow_server::app(state).into_make_service());
-        tracing::info!("Starting server at {}", address);
+        info!("Starting server at {}", address);
         fut.await?;
     }
 
