@@ -14,14 +14,14 @@ use tokio::task;
 use tokio::task::JoinHandle;
 use tokio::time::sleep;
 
+const KEEP_ALIVE: Duration = Duration::from_secs(5);
+
 pub fn get_mqtt_options(
     config: &Homie,
     tls_client_config: Option<Arc<ClientConfig>>,
 ) -> MqttOptions {
     let mut mqtt_options = MqttOptions::new(&config.client_id, &config.host, config.port);
-    mqtt_options.set_keep_alive(5);
-    // TODO: This is needs to be false for the initial connection to work, but what about reconnection?
-    mqtt_options.set_clean_session(true);
+    mqtt_options.set_keep_alive(KEEP_ALIVE);
 
     if let (Some(username), Some(password)) = (&config.username, &config.password) {
         mqtt_options.set_credentials(username, password);

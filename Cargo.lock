@@ -487,9 +487,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "homie-controller"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6bd949129321447a71afe7942ac2fe8b06d270b12866a37ca6405ed9890cdb6"
+checksum = "f3fd7b17d6c1576ac9d3ceddc987c0088ac2dd76c8f5348e1bd3245e807badad"
 dependencies = [
  "log",
  "rumqttc",
@@ -761,9 +761,9 @@ dependencies = [
 
 [[package]]
 name = "mqttbytes"
-version = "0.4.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d710573f2144656d97b82b7ad85c464a1c35ae065278fbee545d40034ec1de5a"
+checksum = "a7bd39d24e28e1544d74ff5746e322a477e52353c8ba7adcaa83d2e760752853"
 dependencies = [
  "bytes",
 ]
@@ -1113,9 +1113,9 @@ dependencies = [
 
 [[package]]
 name = "rumqttc"
-version = "0.8.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd4cf48aa8588d907fc835c47fbc8ef01dc30552467fbf0123cd794f77fd2072"
+checksum = "e63ee9fd315db8880bf3fd3c20684dee03ca42cdd59b7d5cfdd4378f100a2aa0"
 dependencies = [
  "async-channel",
  "bytes",

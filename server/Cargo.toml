@@ -36,12 +36,12 @@ headers = "0.3.4"
 toml = "0.5.8"
 tower-http = { version = "0.1.1", features = ["trace"] }
 axum-server = { version = "0.3.2", features = ["tls-rustls"] }
-homie-controller = "0.4.0"
+homie-controller = "0.5.0"
 jsonwebtoken-google = "0.1.2"
 jsonwebtoken = "7.2.0"
 rand = "0.8.4"
 regex = "1.5.4"
-rumqttc = "0.8.0"
+rumqttc = "0.10.0"
 rustls = "0.19.1"
 rustls-native-certs = "0.5.0"
 semver = { version = "1.0.4", features = ["serde"] }

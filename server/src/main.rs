@@ -61,7 +61,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 event_loop,
                 homie_config.reconnect_interval,
             );
-            controller.start().await?;
             join_handles.push(handle);
             homie_controllers.insert(user.id, controller);
         }
