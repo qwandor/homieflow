@@ -487,9 +487,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "homie-controller"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3fd7b17d6c1576ac9d3ceddc987c0088ac2dd76c8f5348e1bd3245e807badad"
+checksum = "73846c78fc8d4d99ccbe0d2628ebfe94b5256a60be22b5dbce6d12db7e9a8aba"
 dependencies = [
  "log",
  "rumqttc",
