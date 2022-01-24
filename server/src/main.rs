@@ -73,11 +73,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let address = SocketAddr::new(state.config.network.address, state.config.network.port);
 
+    let fut =
+        axum_server::bind(address).serve(houseflow_server::app(state.clone()).into_make_service());
+    info!("Starting server at {}", address);
     if let Some(tls) = &state.config.tls {
-        let fut = axum_server::bind(address)
-            .serve(houseflow_server::app(state.clone()).into_make_service());
-        info!("Starting server at {}", address);
-
         let tls_address = SocketAddr::new(tls.address, tls.port);
         let tls_config = RustlsConfig::from_pem_file(&tls.certificate, &tls.private_key).await?;
         let tls_fut = axum_server::bind_rustls(tls_address, tls_config)
@@ -89,9 +88,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             val = tls_fut => val?
         };
     } else {
-        let fut =
-            axum_server::bind(address).serve(houseflow_server::app(state).into_make_service());
-        info!("Starting server at {}", address);
         fut.await?;
     }
 
