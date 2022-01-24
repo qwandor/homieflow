@@ -119,3 +119,97 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
         other_device_ids: None,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use homie_controller::{Datatype, Property, State};
+    use serde_json::json;
+
+    #[test]
+    fn light_with_brightness() {
+        let on_property = Property {
+            id: "on".to_string(),
+            name: Some("On".to_string()),
+            datatype: Some(Datatype::Boolean),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: None,
+            value: Some("true".to_string()),
+        };
+        let brightness_property = Property {
+            id: "brightness".to_string(),
+            name: Some("Brightness".to_string()),
+            datatype: Some(Datatype::Integer),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("0:100".to_string()),
+            value: Some("100".to_string()),
+        };
+        let node = Node {
+            id: "node".to_string(),
+            name: Some("Node name".to_string()),
+            node_type: None,
+            properties: property_set(vec![on_property, brightness_property]),
+        };
+        let device = Device {
+            id: "device".to_string(),
+            homie_version: "4.0".to_string(),
+            name: Some("Device name".to_string()),
+            state: State::Ready,
+            implementation: None,
+            nodes: node_set(vec![node]),
+            extensions: vec![],
+            local_ip: None,
+            mac: None,
+            firmware_name: None,
+            firmware_version: None,
+            stats_interval: None,
+            stats_uptime: None,
+            stats_signal: None,
+            stats_cputemp: None,
+            stats_cpuload: None,
+            stats_battery: None,
+            stats_freeheap: None,
+            stats_supply: None,
+        };
+
+        assert_eq!(
+            homie_node_to_google_home(&device, &device.nodes.get("node").unwrap()).unwrap(),
+            PayloadDevice {
+                id: "device/node".to_string(),
+                device_type: GHomeDeviceType::Light,
+                traits: vec![GHomeDeviceTrait::OnOff, GHomeDeviceTrait::Brightness],
+                name: response::PayloadDeviceName {
+                    default_names: None,
+                    name: "Device name Node name".to_string(),
+                    nicknames: Some(vec!["Node name".to_string()])
+                },
+                will_report_state: false,
+                notification_supported_by_agent: false,
+                room_hint: None,
+                device_info: None,
+                attributes: json!({}).as_object().unwrap().to_owned(),
+                custom_data: None,
+                other_device_ids: None,
+            }
+        );
+    }
+
+    fn property_set(properties: Vec<Property>) -> HashMap<String, Property> {
+        properties
+            .into_iter()
+            .map(|property| (property.id.clone(), property))
+            .collect()
+    }
+
+    fn node_set(nodes: Vec<Node>) -> HashMap<String, Node> {
+        nodes
+            .into_iter()
+            .map(|node| (node.id.clone(), node))
+            .collect()
+    }
+}
