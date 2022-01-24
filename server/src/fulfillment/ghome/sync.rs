@@ -271,6 +271,84 @@ mod tests {
         );
     }
 
+    #[test]
+    fn temperature_sensor() {
+        let temperature_property = Property {
+            id: "temperature".to_string(),
+            name: Some("Temperature".to_string()),
+            datatype: Some(Datatype::Float),
+            settable: true,
+            retained: true,
+            unit: Some("°C".to_string()),
+            format: None,
+            value: Some("21.3".to_string()),
+        };
+        let humidity_property = Property {
+            id: "humidity".to_string(),
+            name: Some("Humidity".to_string()),
+            datatype: Some(Datatype::Integer),
+            settable: true,
+            retained: true,
+            unit: Some("%".to_string()),
+            format: Some("0:100".to_string()),
+            value: Some("27".to_string()),
+        };
+        let node = Node {
+            id: "node".to_string(),
+            name: Some("Node name".to_string()),
+            node_type: None,
+            properties: property_set(vec![temperature_property, humidity_property]),
+        };
+        let device = Device {
+            id: "device".to_string(),
+            homie_version: "4.0".to_string(),
+            name: Some("Device name".to_string()),
+            state: State::Ready,
+            implementation: None,
+            nodes: node_set(vec![node]),
+            extensions: vec![],
+            local_ip: None,
+            mac: None,
+            firmware_name: None,
+            firmware_version: None,
+            stats_interval: None,
+            stats_uptime: None,
+            stats_signal: None,
+            stats_cputemp: None,
+            stats_cpuload: None,
+            stats_battery: None,
+            stats_freeheap: None,
+            stats_supply: None,
+        };
+
+        assert_eq!(
+            homie_node_to_google_home(&device, &device.nodes.get("node").unwrap()).unwrap(),
+            PayloadDevice {
+                id: "device/node".to_string(),
+                device_type: GHomeDeviceType::Thermostat,
+                traits: vec![GHomeDeviceTrait::TemperatureSetting],
+                name: response::PayloadDeviceName {
+                    default_names: None,
+                    name: "Device name Node name".to_string(),
+                    nicknames: Some(vec!["Node name".to_string()])
+                },
+                will_report_state: false,
+                notification_supported_by_agent: false,
+                room_hint: None,
+                device_info: None,
+                attributes: json!({
+                    "availableThermostatModes": ["off"],
+                    "thermostatTemperatureUnit": "C",
+                    "queryOnlyTemperatureSetting": true})
+                .as_object()
+                .unwrap()
+                .to_owned(),
+                custom_data: None,
+                other_device_ids: None,
+            }
+        );
+    }
+
     fn property_set(properties: Vec<Property>) -> HashMap<String, Property> {
         properties
             .into_iter()
