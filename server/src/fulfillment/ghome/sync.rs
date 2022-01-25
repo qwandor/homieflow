@@ -6,12 +6,13 @@ use crate::State;
 use google_smart_home::device::Trait as GHomeDeviceTrait;
 use google_smart_home::device::Type as GHomeDeviceType;
 use google_smart_home::sync::response;
+use google_smart_home::sync::response::Attributes;
+use google_smart_home::sync::response::ColorModel;
 use google_smart_home::sync::response::PayloadDevice;
+use google_smart_home::sync::response::ThermostatTemperatureUnit;
 use homie_controller::ColorFormat;
 use homie_controller::Device;
 use homie_controller::Node;
-use serde_json::Map;
-use serde_json::Value;
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload, ServerError> {
@@ -59,7 +60,7 @@ fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<Payloa
 fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevice> {
     let id = format!("{}/{}", device.id, node.id);
     let mut traits = vec![];
-    let mut attributes = Map::new();
+    let mut attributes = Attributes::default();
     let mut device_type = None;
     if node.properties.contains_key("on") {
         device_type = Some(GHomeDeviceType::Switch);
@@ -74,29 +75,20 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
     if let Some(color) = node.properties.get("color") {
         if let Ok(color_format) = color.color_format() {
             let color_model = match color_format {
-                ColorFormat::Rgb => "rgb",
-                ColorFormat::Hsv => "hsv",
+                ColorFormat::Rgb => ColorModel::Rgb,
+                ColorFormat::Hsv => ColorModel::Hsv,
             };
             device_type = Some(GHomeDeviceType::Light);
             traits.push(GHomeDeviceTrait::ColorSetting);
-            attributes.insert(
-                "colorModel".to_string(),
-                Value::String(color_model.to_owned()),
-            );
+            attributes.color_model = Some(color_model);
         }
     }
     if node.properties.contains_key("temperature") {
         device_type = Some(GHomeDeviceType::Thermostat);
         traits.push(GHomeDeviceTrait::TemperatureSetting);
-        attributes.insert(
-            "availableThermostatModes".to_string(),
-            Value::Array(vec![Value::String("off".to_string())]),
-        );
-        attributes.insert(
-            "thermostatTemperatureUnit".to_string(),
-            Value::String("C".to_string()),
-        );
-        attributes.insert("queryOnlyTemperatureSetting".to_string(), Value::Bool(true));
+        attributes.available_thermostat_modes = Some(vec!["off".to_string()]);
+        attributes.thermostat_temperature_unit = Some(ThermostatTemperatureUnit::C);
+        attributes.query_only_temperature_setting = Some(true);
     }
 
     let device_name = device.name.clone().unwrap_or_else(|| device.id.clone());
@@ -125,7 +117,6 @@ mod tests {
     use super::*;
 
     use homie_controller::{Datatype, Property, State};
-    use serde_json::json;
 
     #[test]
     fn light_with_brightness() {
@@ -192,7 +183,7 @@ mod tests {
                 notification_supported_by_agent: false,
                 room_hint: None,
                 device_info: None,
-                attributes: json!({}).as_object().unwrap().to_owned(),
+                attributes: Attributes::default(),
                 custom_data: None,
                 other_device_ids: None,
             }
@@ -264,7 +255,10 @@ mod tests {
                 notification_supported_by_agent: false,
                 room_hint: None,
                 device_info: None,
-                attributes: json!({"colorModel": "rgb"}).as_object().unwrap().to_owned(),
+                attributes: Attributes {
+                    color_model: Some(ColorModel::Rgb),
+                    ..Attributes::default()
+                },
                 custom_data: None,
                 other_device_ids: None,
             }
@@ -336,13 +330,12 @@ mod tests {
                 notification_supported_by_agent: false,
                 room_hint: None,
                 device_info: None,
-                attributes: json!({
-                    "availableThermostatModes": ["off"],
-                    "thermostatTemperatureUnit": "C",
-                    "queryOnlyTemperatureSetting": true})
-                .as_object()
-                .unwrap()
-                .to_owned(),
+                attributes: Attributes {
+                    available_thermostat_modes: Some(vec!["off".to_string()]),
+                    thermostat_temperature_unit: Some(ThermostatTemperatureUnit::C),
+                    query_only_temperature_setting: Some(true),
+                    ..Attributes::default()
+                },
                 custom_data: None,
                 other_device_ids: None,
             }
