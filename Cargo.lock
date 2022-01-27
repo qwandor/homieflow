@@ -404,9 +404,10 @@ dependencies = [
 
 [[package]]
 name = "google-smart-home"
-version = "0.1.1"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9c126af60d4d843228ec2050515cb94e1e87031adf4958fa9a0d2dadd3d40a4"
 dependencies = [
- "lazy_static",
  "serde",
  "serde_json",
 ]
