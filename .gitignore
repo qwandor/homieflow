@@ -1,8 +1,5 @@
 # Rust files
-target
+/target
 
 # IDE/Editors
 .vscode
-
-deployment
-.env
