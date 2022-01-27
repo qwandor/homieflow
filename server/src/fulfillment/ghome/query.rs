@@ -73,22 +73,22 @@ fn get_homie_device(
             }
 
             response::PayloadDevice {
-                state,
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
+                state,
             }
         } else {
             response::PayloadDevice {
-                state: Default::default(),
                 status: response::PayloadDeviceStatus::Offline,
                 error_code: Some("offline".to_string()),
+                state: Default::default(),
             }
         }
     } else {
         response::PayloadDevice {
             status: response::PayloadDeviceStatus::Error,
-            state: Default::default(),
             error_code: Some("deviceNotFound".to_string()),
+            state: Default::default(),
         }
     }
 }
