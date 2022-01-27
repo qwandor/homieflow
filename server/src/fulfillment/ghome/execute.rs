@@ -92,19 +92,9 @@ async fn execute_homie_device(
             }
             _ => {}
         }
-        response::PayloadCommand {
-            ids,
-            status: response::PayloadCommandStatus::Error,
-            states: Default::default(),
-            error_code: Some("actionNotAvailable".to_string()),
-        }
+        command_error(ids, "actionNotAvailable")
     } else {
-        response::PayloadCommand {
-            ids,
-            status: response::PayloadCommandStatus::Error,
-            states: Default::default(),
-            error_code: Some("deviceNotFound".to_string()),
-        }
+        command_error(ids, "deviceNotFound")
     }
 }
 
@@ -121,12 +111,7 @@ async fn set_value(
         .await
         .is_err()
     {
-        response::PayloadCommand {
-            ids,
-            status: response::PayloadCommandStatus::Error,
-            states: Default::default(),
-            error_code: Some("transientError".to_string()),
-        }
+        command_error(ids, "transientError")
     } else {
         response::PayloadCommand {
             ids,
@@ -134,5 +119,14 @@ async fn set_value(
             states: Default::default(),
             error_code: None,
         }
+    }
+}
+
+fn command_error(ids: Vec<String>, error_code: &str) -> response::PayloadCommand {
+    response::PayloadCommand {
+        ids,
+        status: response::PayloadCommandStatus::Error,
+        states: Default::default(),
+        error_code: Some(error_code.to_string()),
     }
 }
