@@ -40,7 +40,7 @@ pub fn app(state: State) -> Router<hyper::Body> {
         )
         .nest(
             "/fulfillment",
-            Router::new().route("/google-home", post(fulfillment::ghome::handle)),
+            Router::new().route("/google-home", post(fulfillment::handle)),
         )
         .layer(AddExtensionLayer::new(state))
         .layer(
