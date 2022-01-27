@@ -1,65 +1,41 @@
 # Houseflow
 
-[![build](https://img.shields.io/github/workflow/status/gbaranski/houseflow/CI)](https://github.com/gbaranski/houseflow/actions?query=workflow%3ACI)
-[![lines-of-code](https://img.shields.io/tokei/lines/github/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
+Houseflow is a gateway between Google Home and [devices](docs/homie.md) such as lights and
+temperature sensors following the [Homie convention](https://homieiot.github.io/) defined on top of
+MQTT.
 
-Houseflow is open source home automation system, it lets you configure various devices like lights, switches, gates, sensors, and much more.
+## Code organisation
 
-# Features
+The main modules and directories are:
 
-- [x] Fast, written with high-performance languague, Rust.
-- [x] Integration with Google Home
-- [x] Configurable from config files.
-- [x] CLI Client
-- [ ] Easy to use([issues with #ux label](https://github.com/gbaranski/houseflow/issues?q=is%3Aissue+label%3Aux+))
-- [x] ESP8266 Support 
-- [ ] ESP32 Support(issue [#161](https://github.com/gbaranski/houseflow/issues/161))
+### config/
 
-# Architecture
+Code for parsing the TOML configuration file.
 
-<img src="./docs/architecture.svg">
+### fulfillment/
 
-## Server
+Fulfillment service supports following intents
 
-Houseflow server is splitted into few parts.
+- Sync, get all available devices for a user.
+- Query, used to check device state.
+- Execute, used to execute some command on device, e.g turn on lights.
 
-- Auth, responsible for handling user logging in, refreshing access tokens.
-- OAuth2, handles OAuth2 requests from Google, used for integration with Google Home.
-- Fulfillment. Handles all device related requests from users, such as EXECUTE, QUERY, or SYNC. Supports multiple clients, see [Client](#Client). Uses Lighthouse to send the requests.
-- Lighthouse. A websocket server which connects with embedded devices.
+### oauth/
 
-## Client
+Handles OAuth2 requests from Google Home.
 
-Houseflow is designed to have many clients. At the moment only 2 clients are supported.
+### extractors.rs
 
-- CLI app, located at [`cli/`](./cli)
-- [Google Home](https://developers.google.com/assistant/smarthome/overview)
+Axum extractors for things such as `RefreshToken` or `AccessToken`.
 
-## Device
+## License
 
-### ESP8266/ESP32
+Licensed under the GNU General Public License, Version 3 ([LICENSE](LICENSE) or https://www.gnu.org/licenses/gpl-3.0.en.html).
 
-Written using Arduino framework and PlatformIO.
+## Contributing
 
-### Raspberry Pi
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the
+work by you, shall be licensed as above, without any additional terms or conditions.
 
-Supported via the [`devices/virtual/`](devices/virtual) crate.
-
-# Crates
-
-Houseflow exposes many crates. Here's a brief overview of what they're for.
-- `houseflow-api`. API for communicating with `houseflow-server`.
-- `houseflow-cli`. CLI Interface for communicating with `houseflow-server`. Uses `houseflow-api` under the hood.
-- `houseflow-config`. Type definitions of Houseflow configuration files, and utilities for reading them.
-- `houseflow-db`. Database interface & implementations, currently supported is SQLite. It's used only for storing users and admins.
-- `houseflow-device`. Blocks for building embedded devices.
-- `google-smart-home`. Google Smart Home type definitions, they match with [the official source](https://developers.google.com/assistant/smarthome/overview).
-- `houseflow-server`. Houseflow server, can be used as a library or as a binary.
-- `houseflow-types`. Type definitions for Houseflow, such as Devices, Users, Tokens and etc.
-
-# Contributing
-Contributors are very welcome! **No contribution is too small and all contributions are valued.**
-
-# Getting help
-
-Get in touch with me on Matrix @gbaranski:matrix.org, or via email root@gbaranski.com.
+If you want to contribute to the project, see details of
+[how we accept contributions](CONTRIBUTING.md).
