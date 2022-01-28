@@ -8,8 +8,6 @@ use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
 use homie_controller::Device;
-use serde_json::Map;
-use serde_json::Value;
 use std::collections::HashMap;
 
 #[tracing::instrument(name = "Query", skip(state), err)]
@@ -55,38 +53,22 @@ fn get_homie_device(
         if device.state == homie_controller::State::Ready
             || device.state == homie_controller::State::Sleeping
         {
-            let mut state = Map::new();
+            let mut state = response::State::default();
 
             if let Some(on) = node.properties.get("on") {
-                if let Ok(value) = on.value() {
-                    state.insert("on".to_string(), Value::Bool(value));
-                }
+                state.on = on.value().ok();
             }
             if let Some(brightness) = node.properties.get("brightness") {
-                if let Some(percentage) = property_value_to_percentage(brightness) {
-                    state.insert("brightness".to_string(), Value::Number(percentage.into()));
-                }
+                state.brightness = property_value_to_percentage(brightness);
             }
             if let Some(color) = node.properties.get("color") {
-                if let Some(color_value) = property_value_to_color(color) {
-                    state.insert("color".to_string(), Value::Object(color_value));
-                }
+                state.color = property_value_to_color(color);
             }
             if let Some(temperature) = node.properties.get("temperature") {
-                if let Some(finite_number) = property_value_to_number(temperature) {
-                    state.insert(
-                        "thermostatTemperatureAmbient".to_string(),
-                        Value::Number(finite_number),
-                    );
-                }
+                state.thermostat_temperature_ambient = property_value_to_number(temperature);
             }
             if let Some(humidity) = node.properties.get("humidity") {
-                if let Some(finite_number) = property_value_to_number(humidity) {
-                    state.insert(
-                        "thermostatHumidityAmbient".to_string(),
-                        Value::Number(finite_number),
-                    );
-                }
+                state.thermostat_humidity_ambient = property_value_to_number(humidity);
             }
 
             response::PayloadDevice {
@@ -114,8 +96,8 @@ fn get_homie_device(
 mod tests {
     use super::*;
 
+    use google_smart_home::query::response::Color;
     use homie_controller::{Datatype, Node, Property, State};
-    use serde_json::json;
 
     #[test]
     fn light_with_brightness() {
@@ -178,12 +160,11 @@ mod tests {
             response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
-                state: json!({
-                    "on": true,
-                    "brightness": 100})
-                .as_object()
-                .unwrap()
-                .to_owned(),
+                state: response::State {
+                    on: Some(true),
+                    brightness: Some(100),
+                    ..Default::default()
+                },
             }
         );
     }
@@ -249,15 +230,11 @@ mod tests {
             response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
-                state: json!({
-                    "on": true,
-                    "color": {
-                        "spectrumRgb": 0xffff00
-                    }
-                })
-                .as_object()
-                .unwrap()
-                .to_owned(),
+                state: response::State {
+                    on: Some(true),
+                    color: Some(Color::SpectrumRgb(0xffff00)),
+                    ..Default::default()
+                },
             }
         );
     }
@@ -323,12 +300,11 @@ mod tests {
             response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
-                state: json!({
-                    "thermostatTemperatureAmbient": 21.3,
-                    "thermostatHumidityAmbient": 27})
-                .as_object()
-                .unwrap()
-                .to_owned(),
+                state: response::State {
+                    thermostat_temperature_ambient: Some(21.3),
+                    thermostat_humidity_ambient: Some(27.0),
+                    ..Default::default()
+                },
             }
         );
     }

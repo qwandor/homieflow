@@ -1,5 +1,6 @@
 use google_smart_home::device::commands::ColorAbsolute;
 use google_smart_home::device::commands::ColorValue;
+use google_smart_home::query::response::Color;
 use homie_controller::ColorFormat;
 use homie_controller::ColorHsv;
 use homie_controller::ColorRgb;
@@ -7,9 +8,6 @@ use homie_controller::Datatype;
 use homie_controller::Device;
 use homie_controller::Node;
 use homie_controller::Property;
-use serde_json::Map;
-use serde_json::Number;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::ops::RangeInclusive;
 
@@ -70,15 +68,15 @@ pub fn percentage_to_property_value(property: &Property, percentage: u8) -> Opti
 }
 
 /// Converts the property value to a JSON number if it is an appropriate type.
-pub fn property_value_to_number(property: &Property) -> Option<Number> {
+pub fn property_value_to_number(property: &Property) -> Option<f64> {
     match property.datatype? {
         Datatype::Integer => {
             let value: i64 = property.value().ok()?;
-            Some(value.into())
+            Some(value as f64)
         }
         Datatype::Float => {
             let value = property.value().ok()?;
-            Number::from_f64(value)
+            Some(value)
         }
         _ => None,
     }
@@ -86,28 +84,21 @@ pub fn property_value_to_number(property: &Property) -> Option<Number> {
 
 /// Converts the value of the given property to a Google Home JSON color value, if it is the
 /// appropriate type.
-pub fn property_value_to_color(property: &Property) -> Option<Map<String, Value>> {
+pub fn property_value_to_color(property: &Property) -> Option<Color> {
     let color_format = property.color_format().ok()?;
-    let mut color_value = Map::new();
-    match color_format {
+    let color_value = match color_format {
         ColorFormat::Rgb => {
             let rgb: ColorRgb = property.value().ok()?;
             let rgb_int = ((rgb.r as u32) << 16) + ((rgb.g as u32) << 8) + (rgb.b as u32);
-            color_value.insert("spectrumRgb".to_string(), Value::Number(rgb_int.into()))
+            Color::SpectrumRgb(rgb_int)
         }
         ColorFormat::Hsv => {
             let hsv: ColorHsv = property.value().ok()?;
-            let mut hsv_map = Map::new();
-            hsv_map.insert("hue".to_string(), Value::Number(hsv.h.into()));
-            hsv_map.insert(
-                "saturation".to_string(),
-                Value::Number(Number::from_f64(hsv.s as f64 / 100.0)?),
-            );
-            hsv_map.insert(
-                "value".to_string(),
-                Value::Number(Number::from_f64(hsv.v as f64 / 100.0)?),
-            );
-            color_value.insert("spectrumHsv".to_string(), Value::Object(hsv_map))
+            Color::SpectrumHsv {
+                hue: hsv.h.into(),
+                saturation: hsv.s as f64 / 100.0,
+                value: hsv.v as f64 / 100.0,
+            }
         }
     };
     Some(color_value)
@@ -157,8 +148,10 @@ fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
 
 #[cfg(test)]
 mod tests {
-    use google_smart_home::device::commands::{Color, Hsv};
-    use serde_json::json;
+    use google_smart_home::{
+        device::commands::{Color, Hsv},
+        query,
+    };
 
     use super::*;
 
@@ -215,10 +208,7 @@ mod tests {
             value: Some("42".to_string()),
         };
 
-        assert_eq!(
-            property_value_to_number(&property).unwrap().as_u64(),
-            Some(42)
-        );
+        assert_eq!(property_value_to_number(&property), Some(42.0));
     }
 
     #[test]
@@ -234,10 +224,7 @@ mod tests {
             value: Some("42.2".to_string()),
         };
 
-        assert_eq!(
-            property_value_to_number(&property).unwrap().as_f64(),
-            Some(42.2)
-        );
+        assert_eq!(property_value_to_number(&property), Some(42.2));
     }
 
     #[test]
@@ -254,10 +241,8 @@ mod tests {
         };
 
         assert_eq!(
-            property_value_to_color(&property)
-                .unwrap()
-                .get("spectrumRgb"),
-            Some(&Value::Number(0x112233.into()))
+            property_value_to_color(&property),
+            Some(query::response::Color::SpectrumRgb(0x112233))
         );
         assert_eq!(
             color_absolute_to_property_value(
@@ -289,10 +274,12 @@ mod tests {
         };
 
         assert_eq!(
-            property_value_to_color(&property)
-                .unwrap()
-                .get("spectrumHsv"),
-            Some(&json!({"hue": 280, "saturation": 0.5, "value": 0.6}))
+            property_value_to_color(&property),
+            Some(query::response::Color::SpectrumHsv {
+                hue: 280.0,
+                saturation: 0.5,
+                value: 0.6
+            })
         );
         assert_eq!(
             color_absolute_to_property_value(
