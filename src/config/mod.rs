@@ -67,7 +67,7 @@ pub trait Config: DeserializeOwned + Serialize {
     }
 
     fn default_path() -> PathBuf {
-        xdg::BaseDirectories::with_prefix("houseflow")
+        xdg::BaseDirectories::with_prefix("homieflow")
             .unwrap()
             .get_config_home()
             .join(Self::DEFAULT_FILE)
@@ -87,7 +87,7 @@ pub enum Error {
 }
 
 pub fn init_logging(hide_timestamp: bool) {
-    const LOG_ENV: &str = "HOUSEFLOW_LOG";
+    const LOG_ENV: &str = "HOMIEFLOW_LOG";
 
     let env_filter = match env::var(LOG_ENV) {
         Ok(env) => env,

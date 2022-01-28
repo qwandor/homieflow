@@ -1,6 +1,6 @@
-# Houseflow
+# Homieflow
 
-Houseflow is a gateway between Google Home and [devices](docs/homie.md) such as lights and
+Homieflow is a gateway between Google Home and [devices](docs/homie.md) such as lights and
 temperature sensors following the [Homie convention](https://homieiot.github.io/) defined on top of
 MQTT.
 

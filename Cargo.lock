@@ -498,8 +498,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "houseflow-server"
-version = "0.1.2"
+name = "homieflow"
+version = "0.1.0"
 dependencies = [
  "askama",
  "async-trait",
