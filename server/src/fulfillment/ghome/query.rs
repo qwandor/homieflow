@@ -109,3 +109,248 @@ fn get_homie_device(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use homie_controller::{Datatype, Node, Property, State};
+    use serde_json::json;
+
+    #[test]
+    fn light_with_brightness() {
+        let on_property = Property {
+            id: "on".to_string(),
+            name: Some("On".to_string()),
+            datatype: Some(Datatype::Boolean),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: None,
+            value: Some("true".to_string()),
+        };
+        let brightness_property = Property {
+            id: "brightness".to_string(),
+            name: Some("Brightness".to_string()),
+            datatype: Some(Datatype::Integer),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("0:100".to_string()),
+            value: Some("100".to_string()),
+        };
+        let node = Node {
+            id: "node".to_string(),
+            name: Some("Node name".to_string()),
+            node_type: None,
+            properties: property_set(vec![on_property, brightness_property]),
+        };
+        let device = Device {
+            id: "device".to_string(),
+            homie_version: "4.0".to_string(),
+            name: Some("Device name".to_string()),
+            state: State::Ready,
+            implementation: None,
+            nodes: node_set(vec![node]),
+            extensions: vec![],
+            local_ip: None,
+            mac: None,
+            firmware_name: None,
+            firmware_version: None,
+            stats_interval: None,
+            stats_uptime: None,
+            stats_signal: None,
+            stats_cputemp: None,
+            stats_cpuload: None,
+            stats_battery: None,
+            stats_freeheap: None,
+            stats_supply: None,
+        };
+        let devices = device_set(vec![device]);
+
+        let request_device = request::PayloadDevice {
+            id: "device/node".to_string(),
+            custom_data: None,
+        };
+
+        assert_eq!(
+            get_homie_device(&devices, &request_device),
+            response::PayloadDevice {
+                status: response::PayloadDeviceStatus::Success,
+                error_code: None,
+                state: json!({
+                    "on": true,
+                    "brightness": 100})
+                .as_object()
+                .unwrap()
+                .to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn light_with_color() {
+        let on_property = Property {
+            id: "on".to_string(),
+            name: Some("On".to_string()),
+            datatype: Some(Datatype::Boolean),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: None,
+            value: Some("true".to_string()),
+        };
+        let color_property = Property {
+            id: "color".to_string(),
+            name: Some("Colour".to_string()),
+            datatype: Some(Datatype::Color),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("rgb".to_string()),
+            value: Some("255,255,0".to_string()),
+        };
+        let node = Node {
+            id: "node".to_string(),
+            name: Some("Node name".to_string()),
+            node_type: None,
+            properties: property_set(vec![on_property, color_property]),
+        };
+        let device = Device {
+            id: "device".to_string(),
+            homie_version: "4.0".to_string(),
+            name: Some("Device name".to_string()),
+            state: State::Ready,
+            implementation: None,
+            nodes: node_set(vec![node]),
+            extensions: vec![],
+            local_ip: None,
+            mac: None,
+            firmware_name: None,
+            firmware_version: None,
+            stats_interval: None,
+            stats_uptime: None,
+            stats_signal: None,
+            stats_cputemp: None,
+            stats_cpuload: None,
+            stats_battery: None,
+            stats_freeheap: None,
+            stats_supply: None,
+        };
+        let devices = device_set(vec![device]);
+
+        let request_device = request::PayloadDevice {
+            id: "device/node".to_string(),
+            custom_data: None,
+        };
+
+        assert_eq!(
+            get_homie_device(&devices, &request_device),
+            response::PayloadDevice {
+                status: response::PayloadDeviceStatus::Success,
+                error_code: None,
+                state: json!({
+                    "on": true,
+                    "color": {
+                        "spectrumRgb": 0xffff00
+                    }
+                })
+                .as_object()
+                .unwrap()
+                .to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn temperature_sensor() {
+        let temperature_property = Property {
+            id: "temperature".to_string(),
+            name: Some("Temperature".to_string()),
+            datatype: Some(Datatype::Float),
+            settable: true,
+            retained: true,
+            unit: Some("°C".to_string()),
+            format: None,
+            value: Some("21.3".to_string()),
+        };
+        let humidity_property = Property {
+            id: "humidity".to_string(),
+            name: Some("Humidity".to_string()),
+            datatype: Some(Datatype::Integer),
+            settable: true,
+            retained: true,
+            unit: Some("%".to_string()),
+            format: Some("0:100".to_string()),
+            value: Some("27".to_string()),
+        };
+        let node = Node {
+            id: "node".to_string(),
+            name: Some("Node name".to_string()),
+            node_type: None,
+            properties: property_set(vec![temperature_property, humidity_property]),
+        };
+        let device = Device {
+            id: "device".to_string(),
+            homie_version: "4.0".to_string(),
+            name: Some("Device name".to_string()),
+            state: State::Ready,
+            implementation: None,
+            nodes: node_set(vec![node]),
+            extensions: vec![],
+            local_ip: None,
+            mac: None,
+            firmware_name: None,
+            firmware_version: None,
+            stats_interval: None,
+            stats_uptime: None,
+            stats_signal: None,
+            stats_cputemp: None,
+            stats_cpuload: None,
+            stats_battery: None,
+            stats_freeheap: None,
+            stats_supply: None,
+        };
+        let devices = device_set(vec![device]);
+
+        let request_device = request::PayloadDevice {
+            id: "device/node".to_string(),
+            custom_data: None,
+        };
+
+        assert_eq!(
+            get_homie_device(&devices, &request_device),
+            response::PayloadDevice {
+                status: response::PayloadDeviceStatus::Success,
+                error_code: None,
+                state: json!({
+                    "thermostatTemperatureAmbient": 21.3,
+                    "thermostatHumidityAmbient": 27})
+                .as_object()
+                .unwrap()
+                .to_owned(),
+            }
+        );
+    }
+
+    fn property_set(properties: Vec<Property>) -> HashMap<String, Property> {
+        properties
+            .into_iter()
+            .map(|property| (property.id.clone(), property))
+            .collect()
+    }
+
+    fn node_set(nodes: Vec<Node>) -> HashMap<String, Node> {
+        nodes
+            .into_iter()
+            .map(|node| (node.id.clone(), node))
+            .collect()
+    }
+
+    fn device_set(devices: Vec<Device>) -> HashMap<String, Device> {
+        devices
+            .into_iter()
+            .map(|device| (device.id.clone(), device))
+            .collect()
+    }
+}
