@@ -54,6 +54,7 @@ fn get_homie_device(
             || device.state == homie_controller::State::Sleeping
         {
             let mut state = response::State::default();
+            state.online = true;
 
             if let Some(on) = node.properties.get("on") {
                 state.on = on.value().ok();
@@ -161,6 +162,7 @@ mod tests {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
                 state: response::State {
+                    online: true,
                     on: Some(true),
                     brightness: Some(100),
                     ..Default::default()
@@ -231,6 +233,7 @@ mod tests {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
                 state: response::State {
+                    online: true,
                     on: Some(true),
                     color: Some(Color::SpectrumRgb(0xffff00)),
                     ..Default::default()
@@ -301,6 +304,7 @@ mod tests {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
                 state: response::State {
+                    online: true,
                     thermostat_temperature_ambient: Some(21.3),
                     thermostat_humidity_ambient: Some(27.0),
                     ..Default::default()
