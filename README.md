@@ -4,6 +4,8 @@ Homieflow is a gateway between Google Home and [devices](docs/homie.md) such as 
 temperature sensors following the [Homie convention](https://homieiot.github.io/) defined on top of
 MQTT.
 
+This is not an officially supported Google product.
+
 ## Code organisation
 
 The main modules and directories are:
