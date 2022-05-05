@@ -13,6 +13,7 @@
 use super::defaults;
 use serde::Deserialize;
 use serde::Serialize;
+use std::path::PathBuf;
 
 use crate::types::permission;
 use crate::types::room;
@@ -91,9 +92,9 @@ pub struct Tls {
     #[serde(default = "defaults::server_port")]
     pub port: u16,
     /// Path to the TLS certificate
-    pub certificate: std::path::PathBuf,
+    pub certificate: PathBuf,
     /// Path to the TLS private key
-    pub private_key: std::path::PathBuf,
+    pub private_key: PathBuf,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -105,6 +106,8 @@ pub struct Google {
     pub client_secret: String,
     /// Google Project ID
     pub project_id: String,
+    /// Credentials JSON file for Report State API.
+    pub credentials_file: PathBuf,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -248,8 +251,8 @@ mod tests {
                 authorization_code_key: String::from("some-authorization-code-key"),
             },
             tls: Some(Tls {
-                certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
-                private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
+                certificate: PathBuf::from_str("/etc/certificate").unwrap(),
+                private_key: PathBuf::from_str("/etc/private-key").unwrap(),
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 2, 3, 4)),
                 port: 4321,
             }),
@@ -257,6 +260,7 @@ mod tests {
                 client_id: String::from("google-client-id"),
                 client_secret: String::from("google-client-secret"),
                 project_id: String::from("google-project-id"),
+                credentials_file: PathBuf::from_str("google-credentials.json").unwrap(),
             }),
             logins: Logins {
                 google: Some(GoogleLogin {

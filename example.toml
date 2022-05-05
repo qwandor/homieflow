@@ -18,6 +18,7 @@ port = 4321
 client-id = "google-client-id"
 client-secret = "google-client-secret"
 project-id = "google-project-id"
+credentials-file = "google-credentials.json"
 
 [logins.google]
 client-id = "google-login-client-id"

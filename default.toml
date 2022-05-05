@@ -21,6 +21,7 @@
 # client-id =     # Actions Console -> Account Linking -> Client ID.
 # client-secret = # Actions Console -> Account Linking -> Client Secret. 
 # project-id =    # Project ID set during creation.
+# credentials-file = # JSON service account credentials file downloaded from Google, for gRPC API.
 
 # Google login configuration. If not defined, Google login will be disabled.
 # [logins.google]

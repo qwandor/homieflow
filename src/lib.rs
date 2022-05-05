@@ -13,6 +13,7 @@
 pub mod config;
 mod extractors;
 mod fulfillment;
+pub mod homegraph;
 pub mod homie;
 mod oauth;
 mod types;
