@@ -10,18 +10,12 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use google_smart_home::device::commands::ColorAbsolute;
-use google_smart_home::device::commands::ColorValue;
-use google_smart_home::query::response::Color;
-use homie_controller::ColorFormat;
-use homie_controller::ColorHsv;
-use homie_controller::ColorRgb;
-use homie_controller::Datatype;
-use homie_controller::Device;
-use homie_controller::Node;
-use homie_controller::Property;
-use std::collections::HashMap;
-use std::ops::RangeInclusive;
+use google_smart_home::{
+    device::commands::{ColorAbsolute, ColorValue},
+    query::response::Color,
+};
+use homie_controller::{ColorFormat, ColorHsv, ColorRgb, Datatype, Device, Node, Property};
+use std::{collections::HashMap, ops::RangeInclusive};
 
 /// Given an ID of the form `"device_id/node_id"`, looks up the corresponding Homie node (if any).
 pub fn get_homie_device_by_id<'a>(

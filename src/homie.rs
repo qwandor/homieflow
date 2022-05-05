@@ -11,20 +11,13 @@
 // GNU General Public License for more details.
 
 use crate::types::user::Homie;
-use homie_controller::Event;
-use homie_controller::HomieController;
-use homie_controller::HomieEventLoop;
-use homie_controller::PollError;
-use rumqttc::ClientConfig;
-use rumqttc::ConnectionError;
-use rumqttc::MqttOptions;
-use rumqttc::TlsConfiguration;
-use rumqttc::Transport;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::task;
-use tokio::task::JoinHandle;
-use tokio::time::sleep;
+use homie_controller::{Event, HomieController, HomieEventLoop, PollError, };
+use rumqttc::{ClientConfig, ConnectionError, MqttOptions, TlsConfiguration, Transport};
+use std::{sync::Arc, time::Duration};
+use tokio::{
+    task::{self, JoinHandle},
+    time::sleep,
+};
 
 const KEEP_ALIVE: Duration = Duration::from_secs(5);
 
