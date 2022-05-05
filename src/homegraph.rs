@@ -10,13 +10,15 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use crate::types::user;
+use crate::{json_prost::json_to_prost_struct, types::user};
 use google_api_proto::google::home::graph::v1::{
     home_graph_api_service_client::HomeGraphApiServiceClient, ReportStateAndNotificationDevice,
     ReportStateAndNotificationRequest, StateAndNotificationPayload,
 };
 use google_authz::{Credentials, GoogleAuthz};
+use google_smart_home::query::response;
 use prost_types::{value::Kind, Struct, Value};
+use serde_json::to_value;
 use std::{collections::BTreeMap, error::Error, path::Path};
 use tonic::transport::Channel;
 
@@ -45,13 +47,13 @@ pub async fn report_state(
     client: &mut HomeGraphClient,
     user_id: user::ID,
     device_id: String,
-    state: Struct,
+    state: response::State,
 ) -> Result<(), Box<dyn Error>> {
     let mut fields = BTreeMap::new();
     fields.insert(
         device_id,
         Value {
-            kind: Some(Kind::StructValue(state)),
+            kind: Some(Kind::StructValue(query_state_to_report_state(state))),
         },
     );
     let request = ReportStateAndNotificationRequest {
@@ -67,4 +69,66 @@ pub async fn report_state(
     client.report_state_and_notification(request).await?;
 
     Ok(())
+}
+
+fn query_state_to_report_state(state: response::State) -> Struct {
+    if let Ok(serde_json::Value::Object(state_map)) = to_value(state) {
+        json_to_prost_struct(state_map)
+    } else {
+        panic!("Failed to convert state to map.");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use prost_types::{value::Kind, Value};
+    use std::collections::BTreeMap;
+
+    use super::*;
+
+    #[test]
+    fn convert_state() {
+        let state = response::State {
+            online: true,
+            on: Some(true),
+            brightness: Some(65),
+            thermostat_temperature_ambient: Some(22.0),
+            thermostat_humidity_ambient: Some(42.0),
+            ..Default::default()
+        };
+
+        let mut map = BTreeMap::new();
+        map.insert(
+            "online".to_string(),
+            Value {
+                kind: Some(Kind::BoolValue(true)),
+            },
+        );
+        map.insert(
+            "on".to_string(),
+            Value {
+                kind: Some(Kind::BoolValue(true)),
+            },
+        );
+        map.insert(
+            "brightness".to_string(),
+            Value {
+                kind: Some(Kind::NumberValue(65.0)),
+            },
+        );
+        map.insert(
+            "thermostatTemperatureAmbient".to_string(),
+            Value {
+                kind: Some(Kind::NumberValue(22.0)),
+            },
+        );
+        map.insert(
+            "thermostatHumidityAmbient".to_string(),
+            Value {
+                kind: Some(Kind::NumberValue(42.0)),
+            },
+        );
+
+        assert_eq!(query_state_to_report_state(state).fields, map);
+    }
 }

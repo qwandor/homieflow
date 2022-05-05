@@ -10,141 +10,14 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use crate::{
-    homegraph::{self, HomeGraphClient},
-    json_prost::json_to_prost_struct,
-    types::user::{self, Homie},
-};
+//! Functions to get Google Home state for Homie devices.
+
 use google_smart_home::{
     device::commands::{ColorAbsolute, ColorValue},
     query::response::{self, Color},
 };
-use homie_controller::{
-    ColorFormat, ColorHsv, ColorRgb, Datatype, Device, Event, HomieController, HomieEventLoop,
-    Node, PollError, Property,
-};
-use prost_types::Struct;
-use rumqttc::{ClientConfig, ConnectionError, MqttOptions, TlsConfiguration, Transport};
-use serde_json::to_value;
-use std::{collections::HashMap, ops::RangeInclusive, sync::Arc, time::Duration};
-use tokio::{
-    task::{self, JoinHandle},
-    time::sleep,
-};
-
-const KEEP_ALIVE: Duration = Duration::from_secs(5);
-
-pub fn get_mqtt_options(
-    config: &Homie,
-    tls_client_config: Option<Arc<ClientConfig>>,
-) -> MqttOptions {
-    let mut mqtt_options = MqttOptions::new(&config.client_id, &config.host, config.port);
-    mqtt_options.set_keep_alive(KEEP_ALIVE);
-
-    if let (Some(username), Some(password)) = (&config.username, &config.password) {
-        mqtt_options.set_credentials(username, password);
-    }
-
-    if let Some(client_config) = tls_client_config {
-        mqtt_options.set_transport(Transport::tls_with_config(TlsConfiguration::Rustls(
-            client_config,
-        )));
-    }
-
-    mqtt_options
-}
-
-pub fn spawn_homie_poller(
-    controller: Arc<HomieController>,
-    mut event_loop: HomieEventLoop,
-    mut home_graph_client: Option<HomeGraphClient>,
-    user_id: user::ID,
-    reconnect_interval: Duration,
-) -> JoinHandle<()> {
-    task::spawn(async move {
-        loop {
-            match controller.poll(&mut event_loop).await {
-                Ok(Some(event)) => {
-                    handle_homie_event(controller.as_ref(), &mut home_graph_client, user_id, event)
-                        .await;
-                }
-                Ok(None) => {}
-                Err(e) => {
-                    tracing::error!(
-                        "Failed to poll HomieController for base topic '{}': {}",
-                        controller.base_topic(),
-                        e
-                    );
-                    if let PollError::Connection(ConnectionError::Io(_)) = e {
-                        sleep(reconnect_interval).await;
-                    }
-                }
-            }
-        }
-    })
-}
-
-async fn handle_homie_event(
-    controller: &HomieController,
-    home_graph_client: &mut Option<HomeGraphClient>,
-    user_id: user::ID,
-    event: Event,
-) {
-    match event {
-        Event::PropertyValueChanged {
-            ref device_id,
-            ref node_id,
-            property_id: _,
-            value: _,
-            fresh: true,
-        } => {
-            if let Some(home_graph_client) = home_graph_client {
-                node_state_changed(controller, home_graph_client, user_id, device_id, node_id)
-                    .await;
-            }
-        }
-        _ => tracing::trace!("Homie event {:?}", event),
-    }
-}
-
-async fn node_state_changed(
-    controller: &HomieController,
-    home_graph_client: &mut HomeGraphClient,
-    user_id: user::ID,
-    device_id: &str,
-    node_id: &str,
-) {
-    if let Some(node) = get_homie_node(&controller.devices(), device_id, node_id) {
-        let state = query_state_to_report_state(homie_node_to_state(node));
-
-        if !state.fields.is_empty() {
-            if let Err(e) = homegraph::report_state(
-                home_graph_client,
-                user_id,
-                format!("{}/{}", device_id, node_id),
-                state.clone(),
-            )
-            .await
-            {
-                tracing::error!(
-                    "Error reporting state of {}/{} {:?}: {:?}",
-                    device_id,
-                    node_id,
-                    state,
-                    e,
-                );
-            }
-        }
-    }
-}
-
-fn query_state_to_report_state(state: response::State) -> Struct {
-    if let Ok(serde_json::Value::Object(state_map)) = to_value(state) {
-        json_to_prost_struct(state_map)
-    } else {
-        panic!("Failed to convert state to map.");
-    }
-}
+use homie_controller::{ColorFormat, ColorHsv, ColorRgb, Datatype, Node, Property};
+use std::ops::RangeInclusive;
 
 pub fn homie_node_to_state(node: &Node) -> response::State {
     let mut state = response::State {
@@ -169,15 +42,6 @@ pub fn homie_node_to_state(node: &Node) -> response::State {
     }
 
     state
-}
-
-/// Given a Homie device and node ID, looks up the corresponding Homie node (if any).
-fn get_homie_node<'a>(
-    devices: &'a HashMap<String, Device>,
-    device_id: &str,
-    node_id: &str,
-) -> Option<&'a Node> {
-    devices.get(device_id)?.nodes.get(node_id)
 }
 
 /// Scales the value of the given property to a percentage.
@@ -304,56 +168,8 @@ mod tests {
         device::commands::{Color, Hsv},
         query,
     };
-    use prost_types::{value::Kind, Value};
-    use std::collections::BTreeMap;
 
     use super::*;
-
-    #[test]
-    fn convert_state() {
-        let state = response::State {
-            online: true,
-            on: Some(true),
-            brightness: Some(65),
-            thermostat_temperature_ambient: Some(22.0),
-            thermostat_humidity_ambient: Some(42.0),
-            ..Default::default()
-        };
-
-        let mut map = BTreeMap::new();
-        map.insert(
-            "online".to_string(),
-            Value {
-                kind: Some(Kind::BoolValue(true)),
-            },
-        );
-        map.insert(
-            "on".to_string(),
-            Value {
-                kind: Some(Kind::BoolValue(true)),
-            },
-        );
-        map.insert(
-            "brightness".to_string(),
-            Value {
-                kind: Some(Kind::NumberValue(65.0)),
-            },
-        );
-        map.insert(
-            "thermostatTemperatureAmbient".to_string(),
-            Value {
-                kind: Some(Kind::NumberValue(22.0)),
-            },
-        );
-        map.insert(
-            "thermostatHumidityAmbient".to_string(),
-            Value {
-                kind: Some(Kind::NumberValue(42.0)),
-            },
-        );
-
-        assert_eq!(query_state_to_report_state(state).fields, map);
-    }
 
     #[test]
     fn percentage_integer() {
