@@ -105,6 +105,7 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
 
     let device_name = device.name.clone().unwrap_or_else(|| device.id.clone());
     let node_name = node.name.clone().unwrap_or_else(|| node.id.clone());
+    let will_report_state = !traits.is_empty();
     Some(response::PayloadDevice {
         id,
         device_type: device_type?,
@@ -115,7 +116,7 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
             nicknames: Some(vec![node_name]),
         },
         device_info: None,
-        will_report_state: false,
+        will_report_state,
         notification_supported_by_agent: false,
         room_hint: None,
         attributes,
@@ -191,7 +192,7 @@ mod tests {
                     name: "Device name Node name".to_string(),
                     nicknames: Some(vec!["Node name".to_string()])
                 },
-                will_report_state: false,
+                will_report_state: true,
                 notification_supported_by_agent: false,
                 room_hint: None,
                 device_info: None,
@@ -263,7 +264,7 @@ mod tests {
                     name: "Device name Node name".to_string(),
                     nicknames: Some(vec!["Node name".to_string()])
                 },
-                will_report_state: false,
+                will_report_state: true,
                 notification_supported_by_agent: false,
                 room_hint: None,
                 device_info: None,
@@ -338,7 +339,7 @@ mod tests {
                     name: "Device name Node name".to_string(),
                     nicknames: Some(vec!["Node name".to_string()])
                 },
-                will_report_state: false,
+                will_report_state: true,
                 notification_supported_by_agent: false,
                 room_hint: None,
                 device_info: None,
