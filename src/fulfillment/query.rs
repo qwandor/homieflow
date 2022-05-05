@@ -12,8 +12,8 @@
 
 use super::homie::get_homie_device_by_id;
 use super::homie::property_value_to_color;
-use super::homie::property_value_to_number;
-use super::homie::property_value_to_percentage;
+use crate::homie::property_value_to_number;
+use crate::homie::property_value_to_percentage;
 use crate::types::errors::InternalError;
 use crate::types::user;
 use crate::State;

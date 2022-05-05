@@ -14,8 +14,8 @@ use google_smart_home::{
     device::commands::{ColorAbsolute, ColorValue},
     query::response::Color,
 };
-use homie_controller::{ColorFormat, ColorHsv, ColorRgb, Datatype, Device, Node, Property};
-use std::{collections::HashMap, ops::RangeInclusive};
+use homie_controller::{ColorFormat, ColorHsv, ColorRgb, Device, Node, Property};
+use std::collections::HashMap;
 
 /// Given an ID of the form `"device_id/node_id"`, looks up the corresponding Homie node (if any).
 pub fn get_homie_device_by_id<'a>(
@@ -30,62 +30,7 @@ pub fn get_homie_device_by_id<'a>(
             }
         }
     }
-
     None
-}
-
-/// Scales the value of the given property to a percentage.
-pub fn property_value_to_percentage(property: &Property) -> Option<u8> {
-    match property.datatype? {
-        Datatype::Integer => {
-            let value: i64 = property.value().ok()?;
-            let range: RangeInclusive<i64> = property.range().ok()?;
-            let percentage = (value - range.start()) * 100 / (range.end() - range.start());
-            let percentage = cap(percentage, 0, 100);
-            Some(percentage as u8)
-        }
-        Datatype::Float => {
-            let value: f64 = property.value().ok()?;
-            let range: RangeInclusive<f64> = property.range().ok()?;
-            let percentage = (value - range.start()) * 100.0 / (range.end() - range.start());
-            let percentage = cap(percentage, 0.0, 100.0);
-            Some(percentage as u8)
-        }
-        _ => None,
-    }
-}
-
-/// Converts a percentage to the appropriately scaled property value of the given property, if it has
-/// a range specified.
-pub fn percentage_to_property_value(property: &Property, percentage: u8) -> Option<String> {
-    match property.datatype? {
-        Datatype::Integer => {
-            let range: RangeInclusive<i64> = property.range().ok()?;
-            let value = range.start() + percentage as i64 * (range.end() - range.start()) / 100;
-            Some(format!("{}", value))
-        }
-        Datatype::Float => {
-            let range: RangeInclusive<f64> = property.range().ok()?;
-            let value = range.start() + percentage as f64 * (range.end() - range.start()) / 100.0;
-            Some(format!("{}", value))
-        }
-        _ => None,
-    }
-}
-
-/// Converts the property value to a JSON number if it is an appropriate type.
-pub fn property_value_to_number(property: &Property) -> Option<f64> {
-    match property.datatype? {
-        Datatype::Integer => {
-            let value: i64 = property.value().ok()?;
-            Some(value as f64)
-        }
-        Datatype::Float => {
-            let value = property.value().ok()?;
-            Some(value)
-        }
-        _ => None,
-    }
 }
 
 /// Converts the value of the given property to a Google Home JSON color value, if it is the
@@ -142,96 +87,15 @@ pub fn color_absolute_to_property_value(
     None
 }
 
-fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
-    if value < min {
-        min
-    } else if value > max {
-        max
-    } else {
-        value
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use google_smart_home::{
         device::commands::{Color, Hsv},
         query,
     };
+    use homie_controller::Datatype;
 
     use super::*;
-
-    #[test]
-    fn percentage_integer() {
-        let property = Property {
-            id: "brightness".to_string(),
-            name: Some("Brightness".to_string()),
-            datatype: Some(Datatype::Integer),
-            settable: true,
-            retained: true,
-            unit: None,
-            format: Some("10:20".to_string()),
-            value: Some("13".to_string()),
-        };
-
-        assert_eq!(property_value_to_percentage(&property), Some(30));
-        assert_eq!(
-            percentage_to_property_value(&property, 70),
-            Some("17".to_string())
-        );
-    }
-
-    #[test]
-    fn percentage_float() {
-        let property = Property {
-            id: "brightness".to_string(),
-            name: Some("Brightness".to_string()),
-            datatype: Some(Datatype::Float),
-            settable: true,
-            retained: true,
-            unit: None,
-            format: Some("1.0:2.0".to_string()),
-            value: Some("1.3".to_string()),
-        };
-
-        assert_eq!(property_value_to_percentage(&property), Some(30));
-        assert_eq!(
-            percentage_to_property_value(&property, 70),
-            Some("1.7".to_string())
-        );
-    }
-
-    #[test]
-    fn number_integer() {
-        let property = Property {
-            id: "number".to_string(),
-            name: Some("Number".to_string()),
-            datatype: Some(Datatype::Integer),
-            settable: true,
-            retained: true,
-            unit: None,
-            format: None,
-            value: Some("42".to_string()),
-        };
-
-        assert_eq!(property_value_to_number(&property), Some(42.0));
-    }
-
-    #[test]
-    fn number_float() {
-        let property = Property {
-            id: "number".to_string(),
-            name: Some("Number".to_string()),
-            datatype: Some(Datatype::Float),
-            settable: true,
-            retained: true,
-            unit: None,
-            format: None,
-            value: Some("42.2".to_string()),
-        };
-
-        assert_eq!(property_value_to_number(&property), Some(42.2));
-    }
 
     #[test]
     fn color_rgb() {

@@ -77,6 +77,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let handle = spawn_homie_poller(
                 controller.clone(),
                 event_loop,
+                home_graph_client.clone(),
+                user.id,
                 homie_config.reconnect_interval,
             );
             join_handles.push(handle);

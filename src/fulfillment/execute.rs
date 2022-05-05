@@ -12,7 +12,7 @@
 
 use super::homie::color_absolute_to_property_value;
 use super::homie::get_homie_device_by_id;
-use super::homie::percentage_to_property_value;
+use crate::homie::percentage_to_property_value;
 use crate::types::errors::InternalError;
 use crate::types::user;
 use crate::State;
