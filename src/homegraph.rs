@@ -45,13 +45,13 @@ pub async fn report_state(
     client: &mut HomeGraphClient,
     user_id: user::ID,
     device_id: String,
-    state: BTreeMap<String, Value>,
+    state: Struct,
 ) -> Result<(), Box<dyn Error>> {
     let mut fields = BTreeMap::new();
     fields.insert(
         device_id,
         Value {
-            kind: Some(Kind::StructValue(Struct { fields: state })),
+            kind: Some(Kind::StructValue(state)),
         },
     );
     let request = ReportStateAndNotificationRequest {

@@ -10,8 +10,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use super::homie::color_absolute_to_property_value;
 use super::homie::get_homie_device_by_id;
+use crate::homie::color_absolute_to_property_value;
 use crate::homie::percentage_to_property_value;
 use crate::types::errors::InternalError;
 use crate::types::user;

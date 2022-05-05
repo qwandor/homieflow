@@ -11,16 +11,13 @@
 // GNU General Public License for more details.
 
 use super::homie::get_homie_device_by_id;
-use super::homie::property_value_to_color;
-use crate::homie::property_value_to_number;
-use crate::homie::property_value_to_percentage;
+use crate::homie::homie_node_to_state;
 use crate::types::errors::InternalError;
 use crate::types::user;
 use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
 use homie_controller::Device;
-use homie_controller::Node;
 use std::collections::HashMap;
 
 #[tracing::instrument(name = "Query", skip(state), err)]
@@ -86,31 +83,6 @@ fn get_homie_device(
             state: Default::default(),
         }
     }
-}
-
-fn homie_node_to_state(node: &Node) -> response::State {
-    let mut state = response::State {
-        online: true,
-        ..Default::default()
-    };
-
-    if let Some(on) = node.properties.get("on") {
-        state.on = on.value().ok();
-    }
-    if let Some(brightness) = node.properties.get("brightness") {
-        state.brightness = property_value_to_percentage(brightness);
-    }
-    if let Some(color) = node.properties.get("color") {
-        state.color = property_value_to_color(color);
-    }
-    if let Some(temperature) = node.properties.get("temperature") {
-        state.thermostat_temperature_ambient = property_value_to_number(temperature);
-    }
-    if let Some(humidity) = node.properties.get("humidity") {
-        state.thermostat_humidity_ambient = property_value_to_number(humidity);
-    }
-
-    state
 }
 
 #[cfg(test)]

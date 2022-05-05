@@ -12,19 +12,21 @@
 
 use crate::{
     homegraph::{self, HomeGraphClient},
+    json_prost::json_to_prost_struct,
     types::user::{self, Homie},
 };
+use google_smart_home::{
+    device::commands::{ColorAbsolute, ColorValue},
+    query::response::{self, Color},
+};
 use homie_controller::{
-    Datatype, Device, Event, HomieController, HomieEventLoop, Node, PollError, Property,
+    ColorFormat, ColorHsv, ColorRgb, Datatype, Device, Event, HomieController, HomieEventLoop,
+    Node, PollError, Property,
 };
-use prost_types::{value::Kind, Value};
+use prost_types::Struct;
 use rumqttc::{ClientConfig, ConnectionError, MqttOptions, TlsConfiguration, Transport};
-use std::{
-    collections::{BTreeMap, HashMap},
-    ops::RangeInclusive,
-    sync::Arc,
-    time::Duration,
-};
+use serde_json::to_value;
+use std::{collections::HashMap, ops::RangeInclusive, sync::Arc, time::Duration};
 use tokio::{
     task::{self, JoinHandle},
     time::sleep,
@@ -113,9 +115,9 @@ async fn node_state_changed(
     node_id: &str,
 ) {
     if let Some(node) = get_homie_node(&controller.devices(), device_id, node_id) {
-        let state = homie_node_to_state(node);
+        let state = query_state_to_report_state(homie_node_to_state(node));
 
-        if !state.is_empty() {
+        if !state.fields.is_empty() {
             if let Err(e) = homegraph::report_state(
                 home_graph_client,
                 user_id,
@@ -136,48 +138,34 @@ async fn node_state_changed(
     }
 }
 
-fn homie_node_to_state(node: &Node) -> BTreeMap<String, Value> {
-    let mut state = BTreeMap::new();
+fn query_state_to_report_state(state: response::State) -> Struct {
+    if let Ok(serde_json::Value::Object(state_map)) = to_value(state) {
+        json_to_prost_struct(state_map)
+    } else {
+        panic!("Failed to convert state to map.");
+    }
+}
+
+pub fn homie_node_to_state(node: &Node) -> response::State {
+    let mut state = response::State {
+        online: true,
+        ..Default::default()
+    };
 
     if let Some(on) = node.properties.get("on") {
-        if let Ok(on) = on.value() {
-            state.insert(
-                "on".to_string(),
-                Value {
-                    kind: Some(Kind::BoolValue(on)),
-                },
-            );
-        }
+        state.on = on.value().ok();
     }
     if let Some(brightness) = node.properties.get("brightness") {
-        if let Some(brightness) = property_value_to_percentage(brightness) {
-            state.insert(
-                "brightness".to_string(),
-                Value {
-                    kind: Some(Kind::NumberValue(brightness.into())),
-                },
-            );
-        }
+        state.brightness = property_value_to_percentage(brightness);
+    }
+    if let Some(color) = node.properties.get("color") {
+        state.color = property_value_to_color(color);
     }
     if let Some(temperature) = node.properties.get("temperature") {
-        if let Some(temperature) = property_value_to_number(temperature) {
-            state.insert(
-                "thermostatTemperatureAmbient".to_string(),
-                Value {
-                    kind: Some(Kind::NumberValue(temperature)),
-                },
-            );
-        }
+        state.thermostat_temperature_ambient = property_value_to_number(temperature);
     }
     if let Some(humidity) = node.properties.get("humidity") {
-        if let Some(humidity) = property_value_to_number(humidity) {
-            state.insert(
-                "thermostatHumidityAmbient".to_string(),
-                Value {
-                    kind: Some(Kind::NumberValue(humidity)),
-                },
-            );
-        }
+        state.thermostat_humidity_ambient = property_value_to_number(humidity);
     }
 
     state
@@ -246,6 +234,60 @@ pub fn property_value_to_number(property: &Property) -> Option<f64> {
     }
 }
 
+/// Converts the value of the given property to a Google Home JSON color value, if it is the
+/// appropriate type.
+pub fn property_value_to_color(property: &Property) -> Option<Color> {
+    let color_format = property.color_format().ok()?;
+    let color_value = match color_format {
+        ColorFormat::Rgb => {
+            let rgb: ColorRgb = property.value().ok()?;
+            let rgb_int = ((rgb.r as u32) << 16) + ((rgb.g as u32) << 8) + (rgb.b as u32);
+            Color::SpectrumRgb(rgb_int)
+        }
+        ColorFormat::Hsv => {
+            let hsv: ColorHsv = property.value().ok()?;
+            Color::SpectrumHsv {
+                hue: hsv.h.into(),
+                saturation: hsv.s as f64 / 100.0,
+                value: hsv.v as f64 / 100.0,
+            }
+        }
+    };
+    Some(color_value)
+}
+
+/// Converts a Google Home `ColorAbsolute` command to the appropriate value to set on the given
+/// Homie property, if it is the appropriate format.
+pub fn color_absolute_to_property_value(
+    property: &Property,
+    color_absolute: &ColorAbsolute,
+) -> Option<String> {
+    let color_format = property.color_format().ok()?;
+    match color_format {
+        ColorFormat::Rgb => {
+            if let ColorValue::Rgb { spectrum_rgb } = color_absolute.color.value {
+                let rgb = ColorRgb::new(
+                    (spectrum_rgb >> 16) as u8,
+                    (spectrum_rgb >> 8) as u8,
+                    spectrum_rgb as u8,
+                );
+                return Some(rgb.to_string());
+            }
+        }
+        ColorFormat::Hsv => {
+            if let ColorValue::Hsv { spectrum_hsv } = &color_absolute.color.value {
+                let hsv = ColorHsv::new(
+                    spectrum_hsv.hue as u16,
+                    (spectrum_hsv.saturation * 100.0) as u8,
+                    (spectrum_hsv.value * 100.0) as u8,
+                );
+                return Some(hsv.to_string());
+            }
+        }
+    }
+    None
+}
+
 fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
     if value < min {
         min
@@ -258,7 +300,60 @@ fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
 
 #[cfg(test)]
 mod tests {
+    use google_smart_home::{
+        device::commands::{Color, Hsv},
+        query,
+    };
+    use prost_types::{value::Kind, Value};
+    use std::collections::BTreeMap;
+
     use super::*;
+
+    #[test]
+    fn convert_state() {
+        let state = response::State {
+            online: true,
+            on: Some(true),
+            brightness: Some(65),
+            thermostat_temperature_ambient: Some(22.0),
+            thermostat_humidity_ambient: Some(42.0),
+            ..Default::default()
+        };
+
+        let mut map = BTreeMap::new();
+        map.insert(
+            "online".to_string(),
+            Value {
+                kind: Some(Kind::BoolValue(true)),
+            },
+        );
+        map.insert(
+            "on".to_string(),
+            Value {
+                kind: Some(Kind::BoolValue(true)),
+            },
+        );
+        map.insert(
+            "brightness".to_string(),
+            Value {
+                kind: Some(Kind::NumberValue(65.0)),
+            },
+        );
+        map.insert(
+            "thermostatTemperatureAmbient".to_string(),
+            Value {
+                kind: Some(Kind::NumberValue(22.0)),
+            },
+        );
+        map.insert(
+            "thermostatHumidityAmbient".to_string(),
+            Value {
+                kind: Some(Kind::NumberValue(42.0)),
+            },
+        );
+
+        assert_eq!(query_state_to_report_state(state).fields, map);
+    }
 
     #[test]
     fn percentage_integer() {
@@ -330,5 +425,79 @@ mod tests {
         };
 
         assert_eq!(property_value_to_number(&property), Some(42.2));
+    }
+
+    #[test]
+    fn color_rgb() {
+        let property = Property {
+            id: "color".to_string(),
+            name: Some("Colour".to_string()),
+            datatype: Some(Datatype::Color),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("rgb".to_string()),
+            value: Some("17,34,51".to_string()),
+        };
+
+        assert_eq!(
+            property_value_to_color(&property),
+            Some(query::response::Color::SpectrumRgb(0x112233))
+        );
+        assert_eq!(
+            color_absolute_to_property_value(
+                &property,
+                &ColorAbsolute {
+                    color: Color {
+                        name: None,
+                        value: ColorValue::Rgb {
+                            spectrum_rgb: 0x445566
+                        }
+                    }
+                }
+            ),
+            Some("68,85,102".to_string())
+        );
+    }
+
+    #[test]
+    fn color_hsv() {
+        let property = Property {
+            id: "color".to_string(),
+            name: Some("Colour".to_string()),
+            datatype: Some(Datatype::Color),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("hsv".to_string()),
+            value: Some("280,50,60".to_string()),
+        };
+
+        assert_eq!(
+            property_value_to_color(&property),
+            Some(query::response::Color::SpectrumHsv {
+                hue: 280.0,
+                saturation: 0.5,
+                value: 0.6
+            })
+        );
+        assert_eq!(
+            color_absolute_to_property_value(
+                &property,
+                &ColorAbsolute {
+                    color: Color {
+                        name: None,
+                        value: ColorValue::Hsv {
+                            spectrum_hsv: Hsv {
+                                hue: 290.0,
+                                saturation: 0.2,
+                                value: 0.3
+                            }
+                        }
+                    }
+                }
+            ),
+            Some("290,20,30".to_string())
+        );
     }
 }

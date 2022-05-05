@@ -15,6 +15,7 @@ mod extractors;
 mod fulfillment;
 pub mod homegraph;
 pub mod homie;
+pub mod json_prost;
 mod oauth;
 mod types;
 
