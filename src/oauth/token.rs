@@ -77,13 +77,10 @@ async fn on_refresh_token_grant(
     state: State,
     refresh_token: String,
 ) -> Result<Response, ServerError> {
-    let refresh_token = RefreshToken::decode(
-        state.config.secrets.refresh_key.as_bytes(),
-        &refresh_token,
-    )
-    .map_err(|err| {
-        OAuthError::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string())))
-    })?;
+    let refresh_token =
+        RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &refresh_token).map_err(
+            |err| OAuthError::InvalidGrant(Some(format!("invalid refresh token: {}", err))),
+        )?;
 
     tracing::info!(user_id = %refresh_token.claims.sub, "Refresh token grant");
 
@@ -110,10 +107,7 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
         &code,
     )
     .map_err(|err| {
-        OAuthError::InvalidGrant(Some(format!(
-            "invalid authorization code: {}",
-            err.to_string()
-        )))
+        OAuthError::InvalidGrant(Some(format!("invalid authorization code: {}", err)))
     })?;
 
     tracing::info!(user_id = %code.claims.sub, "Authorization code grant");

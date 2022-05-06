@@ -65,8 +65,10 @@ fn get_homie_device(
         if device.state == homie_controller::State::Ready
             || device.state == homie_controller::State::Sleeping
         {
-            let mut state = response::State::default();
-            state.online = true;
+            let mut state = response::State {
+                online: true,
+                ..Default::default()
+            };
 
             if let Some(on) = node.properties.get("on") {
                 state.on = on.value().ok();

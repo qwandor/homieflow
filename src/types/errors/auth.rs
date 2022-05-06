@@ -13,6 +13,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 pub enum Error {
     /// `Authorization` header has invalid syntax

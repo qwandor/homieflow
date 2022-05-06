@@ -31,13 +31,13 @@ use serde::Serialize;
 )]
 pub enum ServerError {
     #[error("internal error: {0}")]
-    InternalError(#[from] InternalError),
+    Internal(#[from] InternalError),
     #[error("validation error: {0}")]
-    ValidationError(String),
+    Validation(String),
     #[error("auth error: {0}")]
-    AuthError(#[from] AuthError),
+    Auth(#[from] AuthError),
     #[error("oauth error: {0}")]
-    OAuthError(#[from] OAuthError),
+    OAuth(#[from] OAuthError),
 }
 
 impl axum::response::IntoResponse for ServerError {
@@ -48,15 +48,15 @@ impl axum::response::IntoResponse for ServerError {
     fn into_response(self) -> http::Response<Self::Body> {
         use http::StatusCode;
         let status = match self {
-            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::AuthError(ref err) => match err {
+            Self::Validation(_) => StatusCode::BAD_REQUEST,
+            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Auth(ref err) => match err {
                 AuthError::InvalidAuthorizationHeader(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidToken(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidGoogleJwt(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },
-            Self::OAuthError(_) => StatusCode::BAD_REQUEST,
+            Self::OAuth(_) => StatusCode::BAD_REQUEST,
         };
         let mut response = axum::Json(self).into_response();
         *response.status_mut() = status;
@@ -67,7 +67,7 @@ impl axum::response::IntoResponse for ServerError {
 
 impl From<TokenError> for ServerError {
     fn from(e: TokenError) -> Self {
-        Self::AuthError(e.into())
+        Self::Auth(e.into())
     }
 }
 
@@ -79,6 +79,6 @@ impl From<askama::Error> for InternalError {
 
 impl From<askama::Error> for ServerError {
     fn from(e: askama::Error) -> Self {
-        Self::InternalError(e.into())
+        Self::Internal(e.into())
     }
 }
