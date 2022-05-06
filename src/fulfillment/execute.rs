@@ -34,14 +34,13 @@ pub async fn handle(
     user_id: user::ID,
     payload: &request::Payload,
 ) -> Result<response::Payload, InternalError> {
-    let requests = payload
-        .commands
-        .iter()
-        .flat_map(|cmd| cmd.execution.iter().zip(cmd.devices.iter()));
-
     if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
-        let commands =
-            execute_homie_devices(homie_controller, &homie_controller.devices(), requests).await;
+        let commands = execute_homie_devices(
+            homie_controller,
+            &homie_controller.devices(),
+            &payload.commands,
+        )
+        .await;
         Ok(response::Payload {
             error_code: None,
             debug_string: None,
@@ -59,11 +58,16 @@ pub async fn handle(
 async fn execute_homie_devices<'a>(
     controller: &HomieController,
     devices: &HashMap<String, Device>,
-    requests: impl Iterator<Item = (&'a PayloadCommandExecution, &'a PayloadCommandDevice)>,
+    commands: &[request::PayloadCommand],
 ) -> Vec<response::PayloadCommand> {
     let mut responses = vec![];
-    for (execution, device) in requests {
-        responses.push(execute_homie_device(controller, devices, execution, device).await);
+
+    for command in commands {
+        for device in &command.devices {
+            for execution in &command.execution {
+                responses.push(execute_homie_device(controller, devices, execution, device).await);
+            }
+        }
     }
     responses
 }
