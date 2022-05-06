@@ -22,53 +22,56 @@ use serde_json::to_value;
 use std::{collections::BTreeMap, error::Error, path::Path};
 use tonic::transport::Channel;
 
-pub type HomeGraphClient = HomeGraphApiServiceClient<GoogleAuthz<Channel>>;
+#[derive(Clone, Debug)]
+pub struct HomeGraphClient(pub HomeGraphApiServiceClient<GoogleAuthz<Channel>>);
 
-/// Connects to the Google Home Graph gRPC API server and returns a client which can make calls to
-/// the API.
-pub async fn connect(credentials_file: &Path) -> Result<HomeGraphClient, Box<dyn Error>> {
-    let channel = Channel::from_static("https://homegraph.googleapis.com")
-        .connect()
-        .await?;
-    let credentials = Credentials::builder()
-        .json_file(credentials_file)
-        .scopes(&["https://www.googleapis.com/auth/homegraph"])
-        .build()
-        .await?;
-    let channel = GoogleAuthz::builder(channel)
-        .credentials(credentials)
-        .build()
-        .await;
-    Ok(HomeGraphApiServiceClient::new(channel))
-}
+impl HomeGraphClient {
+    /// Connects to the Google Home Graph gRPC API server and returns a client which can make calls to
+    /// the API.
+    pub async fn connect(credentials_file: &Path) -> Result<Self, Box<dyn Error>> {
+        let channel = Channel::from_static("https://homegraph.googleapis.com")
+            .connect()
+            .await?;
+        let credentials = Credentials::builder()
+            .json_file(credentials_file)
+            .scopes(&["https://www.googleapis.com/auth/homegraph"])
+            .build()
+            .await?;
+        let channel = GoogleAuthz::builder(channel)
+            .credentials(credentials)
+            .build()
+            .await;
+        Ok(Self(HomeGraphApiServiceClient::new(channel)))
+    }
 
-/// Reports state of the single device with the given ID for the given user.
-pub async fn report_state(
-    client: &mut HomeGraphClient,
-    user_id: user::ID,
-    device_id: String,
-    state: response::State,
-) -> Result<(), Box<dyn Error>> {
-    let mut fields = BTreeMap::new();
-    fields.insert(
-        device_id,
-        Value {
-            kind: Some(Kind::StructValue(query_state_to_report_state(state))),
-        },
-    );
-    let request = ReportStateAndNotificationRequest {
-        agent_user_id: user_id.to_string(),
-        payload: Some(StateAndNotificationPayload {
-            devices: Some(ReportStateAndNotificationDevice {
-                states: Some(Struct { fields }),
-                notifications: None,
+    /// Reports state of the single device with the given ID for the given user.
+    pub async fn report_state(
+        &mut self,
+        user_id: user::ID,
+        device_id: String,
+        state: response::State,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut fields = BTreeMap::new();
+        fields.insert(
+            device_id,
+            Value {
+                kind: Some(Kind::StructValue(query_state_to_report_state(state))),
+            },
+        );
+        let request = ReportStateAndNotificationRequest {
+            agent_user_id: user_id.to_string(),
+            payload: Some(StateAndNotificationPayload {
+                devices: Some(ReportStateAndNotificationDevice {
+                    states: Some(Struct { fields }),
+                    notifications: None,
+                }),
             }),
-        }),
-        ..Default::default()
-    };
-    client.report_state_and_notification(request).await?;
+            ..Default::default()
+        };
+        self.0.report_state_and_notification(request).await?;
 
-    Ok(())
+        Ok(())
+    }
 }
 
 fn query_state_to_report_state(state: response::State) -> Struct {

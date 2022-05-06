@@ -14,7 +14,7 @@ pub mod state;
 
 use self::state::homie_node_to_state;
 use crate::{
-    homegraph::{report_state, HomeGraphClient},
+    homegraph::HomeGraphClient,
     types::user::{self, Homie},
 };
 use homie_controller::{Device, Event, HomieController, HomieEventLoop, Node, PollError};
@@ -110,13 +110,9 @@ async fn node_state_changed(
     if let Some(node) = get_homie_node(&controller.devices(), device_id, node_id) {
         let state = homie_node_to_state(node);
 
-        if let Err(e) = report_state(
-            home_graph_client,
-            user_id,
-            format!("{}/{}", device_id, node_id),
-            state.clone(),
-        )
-        .await
+        if let Err(e) = home_graph_client
+            .report_state(user_id, format!("{}/{}", device_id, node_id), state.clone())
+            .await
         {
             tracing::error!(
                 "Error reporting state of {}/{} {:?}: {:?}",

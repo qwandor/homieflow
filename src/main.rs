@@ -15,7 +15,7 @@ use homie_controller::HomieController;
 use homieflow::config::server::Config;
 use homieflow::config::Config as _;
 use homieflow::config::Error as ConfigError;
-use homieflow::homegraph::connect;
+use homieflow::homegraph::HomeGraphClient;
 use homieflow::homie::get_mqtt_options;
 use homieflow::homie::spawn_homie_poller;
 use rustls::ClientConfig;
@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     debug!("Config: {:#?}", config);
 
     let home_graph_client = if let Some(google) = &config.google {
-        Some(connect(&google.credentials_file).await?)
+        Some(HomeGraphClient::connect(&google.credentials_file).await?)
     } else {
         None
     };
