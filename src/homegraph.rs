@@ -50,7 +50,7 @@ impl HomeGraphClient {
         user_id: user::ID,
         device_id: String,
         state: response::State,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), Status> {
         let mut fields = BTreeMap::new();
         fields.insert(
             device_id,
