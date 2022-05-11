@@ -84,6 +84,26 @@ async fn handle_homie_event(
     event: Event,
 ) {
     match event {
+        Event::DeviceUpdated {
+            device_id: _,
+            has_required_attributes: true,
+        }
+        | Event::NodeUpdated {
+            device_id: _,
+            node_id: _,
+            has_required_attributes: true,
+        }
+        | Event::PropertyUpdated {
+            device_id: _,
+            node_id: _,
+            property_id: _,
+            has_required_attributes: true,
+        } => {
+            tracing::trace!("Homie event {:?}, requesting sync.", event);
+            if let Some(home_graph_client) = home_graph_client {
+                device_updated(home_graph_client, user_id).await;
+            }
+        }
         Event::PropertyValueChanged {
             ref device_id,
             ref node_id,
@@ -97,6 +117,13 @@ async fn handle_homie_event(
             }
         }
         _ => tracing::trace!("Homie event {:?}", event),
+    }
+}
+
+/// There has been some update to the user's set of devices.
+async fn device_updated(home_graph_client: &mut HomeGraphClient, user_id: user::ID) {
+    if let Err(e) = home_graph_client.request_sync(user_id).await {
+        tracing::error!("Error requesting sync for {}: {:?}", user_id, e);
     }
 }
 
