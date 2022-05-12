@@ -32,7 +32,7 @@ impl RateLimiter {
         callback: T,
     ) -> Self {
         let notify = Arc::new(Notify::new());
-        let handle = spawn_looper(notify.clone(), period, callback);
+        let handle = task::spawn(callback_run_loop(notify.clone(), period, callback));
         Self { notify, handle }
     }
 
@@ -53,16 +53,14 @@ impl Drop for RateLimiter {
     }
 }
 
-fn spawn_looper(
+async fn callback_run_loop(
     notify: Arc<Notify>,
     period: Duration,
     mut callback: impl FnMut() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + 'static,
-) -> JoinHandle<()> {
-    task::spawn(async move {
-        loop {
-            notify.notified().await;
-            callback().await;
-            time::sleep(period).await;
-        }
-    })
+) {
+    loop {
+        notify.notified().await;
+        callback().await;
+        time::sleep(period).await;
+    }
 }
