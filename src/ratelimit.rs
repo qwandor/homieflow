@@ -29,17 +29,10 @@ impl RateLimiter {
     /// `period`.
     pub fn new<T: FnMut() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + 'static>(
         period: Duration,
-        mut callback: T,
+        callback: T,
     ) -> Self {
         let notify = Arc::new(Notify::new());
-        let notify_copy = notify.clone();
-        let handle = task::spawn(async move {
-            loop {
-                notify_copy.notified().await;
-                callback().await;
-                time::sleep(period).await;
-            }
-        });
+        let handle = spawn_looper(notify.clone(), period, callback);
         Self { notify, handle }
     }
 
@@ -58,4 +51,18 @@ impl Drop for RateLimiter {
     fn drop(&mut self) {
         self.handle.abort();
     }
+}
+
+fn spawn_looper(
+    notify: Arc<Notify>,
+    period: Duration,
+    mut callback: impl FnMut() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + 'static,
+) -> JoinHandle<()> {
+    task::spawn(async move {
+        loop {
+            notify.notified().await;
+            callback().await;
+            time::sleep(period).await;
+        }
+    })
 }
