@@ -15,6 +15,7 @@ pub mod state;
 use self::state::homie_node_to_state;
 use crate::{
     homegraph::HomeGraphClient,
+    ratelimit::RateLimiter,
     types::user::{self, Homie},
 };
 use homie_controller::{Device, Event, HomieController, HomieEventLoop, Node, PollError};
@@ -26,6 +27,8 @@ use tokio::{
 };
 
 const KEEP_ALIVE: Duration = Duration::from_secs(5);
+/// The minimum time between two calls to request sync.
+const REQUEST_SYNC_RATE_LIMIT: Duration = Duration::from_secs(10);
 
 pub fn get_mqtt_options(
     config: &Homie,
@@ -55,11 +58,22 @@ pub fn spawn_homie_poller(
     reconnect_interval: Duration,
 ) -> JoinHandle<()> {
     task::spawn(async move {
+        let home_graph_client_clone = home_graph_client.clone();
+        let request_sync = RateLimiter::new(REQUEST_SYNC_RATE_LIMIT, move || {
+            Box::pin(request_sync(user_id, home_graph_client_clone.clone()))
+        });
+
         loop {
             match controller.poll(&mut event_loop).await {
                 Ok(Some(event)) => {
-                    handle_homie_event(controller.as_ref(), &mut home_graph_client, user_id, event)
-                        .await;
+                    handle_homie_event(
+                        controller.as_ref(),
+                        &request_sync,
+                        &mut home_graph_client,
+                        user_id,
+                        event,
+                    )
+                    .await;
                 }
                 Ok(None) => {}
                 Err(e) => {
@@ -79,6 +93,7 @@ pub fn spawn_homie_poller(
 
 async fn handle_homie_event(
     controller: &HomieController,
+    request_sync: &RateLimiter,
     home_graph_client: &mut Option<HomeGraphClient>,
     user_id: user::ID,
     event: Event,
@@ -100,9 +115,7 @@ async fn handle_homie_event(
             has_required_attributes: true,
         } => {
             tracing::trace!("Homie event {:?}, requesting sync.", event);
-            if let Some(home_graph_client) = home_graph_client {
-                device_updated(home_graph_client, user_id).await;
-            }
+            request_sync.execute();
         }
         Event::PropertyValueChanged {
             ref device_id,
@@ -120,10 +133,11 @@ async fn handle_homie_event(
     }
 }
 
-/// There has been some update to the user's set of devices.
-async fn device_updated(home_graph_client: &mut HomeGraphClient, user_id: user::ID) {
-    if let Err(e) = home_graph_client.request_sync(user_id).await {
-        tracing::error!("Error requesting sync for {}: {:?}", user_id, e);
+async fn request_sync(user_id: user::ID, home_graph_client: Option<HomeGraphClient>) {
+    if let Some(mut home_graph_client) = home_graph_client {
+        if let Err(e) = home_graph_client.request_sync(user_id).await {
+            tracing::error!("Error requesting sync for {}: {:?}", user_id, e);
+        }
     }
 }
 
