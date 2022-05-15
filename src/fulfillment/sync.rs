@@ -56,13 +56,9 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
 fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<PayloadDevice> {
     let mut google_home_devices = vec![];
     for device in devices.values() {
-        if device.state == homie_controller::State::Ready
-            || device.state == homie_controller::State::Sleeping
-        {
-            for node in device.nodes.values() {
-                if let Some(google_home_device) = homie_node_to_google_home(device, node) {
-                    google_home_devices.push(google_home_device);
-                }
+        for node in device.nodes.values() {
+            if let Some(google_home_device) = homie_node_to_google_home(device, node) {
+                google_home_devices.push(google_home_device);
             }
         }
     }
