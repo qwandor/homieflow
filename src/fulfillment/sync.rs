@@ -31,11 +31,7 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
     if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
         let devices = homie_devices_to_google_home(&homie_controller.devices());
 
-        tracing::info!(
-            "Synced {} devices: {}",
-            devices.len(),
-            serde_json::to_string_pretty(&devices).unwrap(),
-        );
+        tracing::info!("Synced {} devices", devices.len(),);
 
         Ok(response::Payload {
             agent_user_id: user_id.to_string(),
