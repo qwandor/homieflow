@@ -63,7 +63,7 @@ fn get_homie_device(
         if device.state == homie_controller::State::Ready
             || device.state == homie_controller::State::Sleeping
         {
-            let state = homie_node_to_state(node);
+            let state = homie_node_to_state(node, true);
             response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,

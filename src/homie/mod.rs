@@ -162,8 +162,10 @@ async fn node_state_changed(
     device_id: &str,
     node_id: &str,
 ) {
-    if let Some(node) = get_homie_node(&controller.devices(), device_id, node_id) {
-        let state = homie_node_to_state(node);
+    if let Some((device, node)) = get_homie_node(&controller.devices(), device_id, node_id) {
+        let online = device.state == homie_controller::State::Ready
+            || device.state == homie_controller::State::Sleeping;
+        let state = homie_node_to_state(node, online);
 
         if let Err(e) = home_graph_client
             .report_state(user_id, format!("{}/{}", device_id, node_id), state.clone())
@@ -181,10 +183,15 @@ async fn node_state_changed(
 }
 
 /// Given a Homie device and node ID, looks up the corresponding Homie node (if any).
-fn get_homie_node<'a>(
+pub fn get_homie_node<'a>(
     devices: &'a HashMap<String, Device>,
     device_id: &str,
     node_id: &str,
-) -> Option<&'a Node> {
-    devices.get(device_id)?.nodes.get(node_id)
+) -> Option<(&'a Device, &'a Node)> {
+    if let Some(device) = devices.get(device_id) {
+        if let Some(node) = device.nodes.get(node_id) {
+            return Some((device, node));
+        }
+    }
+    None
 }

@@ -19,9 +19,9 @@ use google_smart_home::{
 use homie_controller::{ColorFormat, ColorHsv, ColorRgb, Datatype, Node, Property};
 use std::ops::RangeInclusive;
 
-pub fn homie_node_to_state(node: &Node) -> response::State {
+pub fn homie_node_to_state(node: &Node, online: bool) -> response::State {
     let mut state = response::State {
-        online: true,
+        online,
         ..Default::default()
     };
 

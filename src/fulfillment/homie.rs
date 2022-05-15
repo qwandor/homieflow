@@ -10,6 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+use crate::homie::get_homie_node;
 use homie_controller::{Device, Node};
 use std::collections::HashMap;
 
@@ -20,11 +21,8 @@ pub fn get_homie_device_by_id<'a>(
 ) -> Option<(&'a Device, &'a Node)> {
     let id_parts: Vec<_> = id.split('/').collect();
     if let [device_id, node_id] = id_parts.as_slice() {
-        if let Some(device) = devices.get(*device_id) {
-            if let Some(node) = device.nodes.get(*node_id) {
-                return Some((device, node));
-            }
-        }
+        get_homie_node(devices, device_id, node_id)
+    } else {
+        None
     }
-    None
 }
