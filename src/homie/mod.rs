@@ -52,43 +52,57 @@ pub fn get_mqtt_options(
 
 pub fn spawn_homie_poller(
     controller: Arc<HomieController>,
+    event_loop: HomieEventLoop,
+    home_graph_client: Option<HomeGraphClient>,
+    user_id: user::ID,
+    reconnect_interval: Duration,
+) -> JoinHandle<()> {
+    task::spawn(homie_poller(
+        controller,
+        event_loop,
+        home_graph_client,
+        user_id,
+        reconnect_interval,
+    ))
+}
+
+async fn homie_poller(
+    controller: Arc<HomieController>,
     mut event_loop: HomieEventLoop,
     mut home_graph_client: Option<HomeGraphClient>,
     user_id: user::ID,
     reconnect_interval: Duration,
-) -> JoinHandle<()> {
-    task::spawn(async move {
-        let home_graph_client_clone = home_graph_client.clone();
-        let request_sync = RateLimiter::new(REQUEST_SYNC_RATE_LIMIT, move || {
-            Box::pin(request_sync(user_id, home_graph_client_clone.clone()))
-        });
+) {
+    let home_graph_client_clone = home_graph_client.clone();
+    let request_sync = RateLimiter::new(REQUEST_SYNC_RATE_LIMIT, move || {
+        Box::pin(request_sync(user_id, home_graph_client_clone.clone()))
+    });
 
-        loop {
-            match controller.poll(&mut event_loop).await {
-                Ok(Some(event)) => {
-                    handle_homie_event(
-                        controller.as_ref(),
-                        &request_sync,
-                        &mut home_graph_client,
-                        user_id,
-                        event,
-                    )
-                    .await;
-                }
-                Ok(None) => {}
-                Err(e) => {
-                    tracing::error!(
-                        "Failed to poll HomieController for base topic '{}': {}",
-                        controller.base_topic(),
-                        e
-                    );
-                    if let PollError::Connection(ConnectionError::Io(_)) = e {
-                        sleep(reconnect_interval).await;
-                    }
+    loop {
+        match controller.poll(&mut event_loop).await {
+            Ok(Some(event)) => {
+                handle_homie_event(
+                    controller.as_ref(),
+                    &request_sync,
+                    &mut home_graph_client,
+                    user_id,
+                    event,
+                )
+                .await;
+            }
+            Ok(None) => {}
+            Err(e) => {
+                tracing::error!(
+                    "Failed to poll HomieController for base topic '{}': {}",
+                    controller.base_topic(),
+                    e
+                );
+                if let PollError::Connection(ConnectionError::Io(_)) = e {
+                    sleep(reconnect_interval).await;
                 }
             }
         }
-    })
+    }
 }
 
 async fn handle_homie_event(
