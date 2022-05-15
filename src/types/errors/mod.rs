@@ -16,6 +16,7 @@ mod oauth;
 mod token;
 
 pub use auth::Error as AuthError;
+use http::header::WWW_AUTHENTICATE;
 pub use internal::Error as InternalError;
 pub use oauth::Error as OAuthError;
 pub use token::Error as TokenError;
@@ -56,7 +57,13 @@ impl axum::response::IntoResponse for ServerError {
                 AuthError::InvalidGoogleJwt(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },
-            Self::OAuth(_) => StatusCode::BAD_REQUEST,
+            Self::OAuth(oauth) => {
+                let header = oauth.www_authenticate_header();
+                let mut response = axum::Json(oauth).into_response();
+                *response.status_mut() = StatusCode::BAD_REQUEST;
+                response.headers_mut().insert(WWW_AUTHENTICATE, header);
+                return response;
+            }
         };
         let mut response = axum::Json(self).into_response();
         *response.status_mut() = status;

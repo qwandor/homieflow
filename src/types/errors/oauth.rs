@@ -10,10 +10,17 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+use http::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::to_value;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
+#[serde(
+    tag = "error",
+    content = "error_description",
+    rename_all = "snake_case"
+)]
 pub enum Error {
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
@@ -43,4 +50,17 @@ pub enum Error {
     /// Note that unknown grant types also use this specific error code rather than using the invalid_request above.
     #[error("unsupported grant type, description: {0:?}")]
     UnsupportedGrantType(Option<String>),
+}
+
+impl Error {
+    pub fn www_authenticate_header(&self) -> HeaderValue {
+        let value = to_value(self).unwrap();
+        let json = value.as_object().unwrap();
+        format!(
+            "error=\"{}\" error_description=\"{}\"",
+            json["error"], json["error_description"]
+        )
+        .parse()
+        .unwrap()
+    }
 }
