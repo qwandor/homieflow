@@ -10,6 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+use crate::config::server::Google;
 use crate::types::errors::InternalError;
 use crate::types::errors::OAuthError;
 use crate::types::errors::ServerError;
@@ -142,17 +143,23 @@ pub async fn handle(
     Extension(state): Extension<State>,
     Form(request): Form<Request>,
 ) -> Result<Json<Response>, ServerError> {
-    let verify_client = |client_id, client_secret| -> Result<(), ServerError> {
-        let google_config =
-            state.config.google.as_ref().ok_or_else(|| {
-                InternalError::Other("Google Home API not configured".to_string())
-            })?;
+    let google_config = state
+        .config
+        .google
+        .as_ref()
+        .ok_or_else(|| InternalError::Other("Google Home API not configured".to_string()))?;
+
+    fn verify_client(
+        google_config: &Google,
+        client_id: String,
+        client_secret: String,
+    ) -> Result<(), ServerError> {
         if client_id != google_config.client_id || client_secret != google_config.client_secret {
             Err(OAuthError::InvalidClient(None).into())
         } else {
             Ok(())
         }
-    };
+    }
 
     match request {
         Request::RefreshToken {
@@ -161,7 +168,7 @@ pub async fn handle(
             client_secret,
             ..
         } => {
-            verify_client(client_id, client_secret)?;
+            verify_client(google_config, client_id, client_secret)?;
             on_refresh_token_grant(state, refresh_token).await
         }
         Request::AuthorizationCode {
@@ -170,7 +177,7 @@ pub async fn handle(
             code,
             ..
         } => {
-            verify_client(client_id, client_secret)?;
+            verify_client(google_config, client_id, client_secret)?;
             on_authorization_code_grant(state, code).await
         }
     }
