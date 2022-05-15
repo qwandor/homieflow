@@ -84,7 +84,7 @@ impl HomeGraphClient {
     pub async fn request_sync(&self, user_id: user::ID) -> Result<(), Status> {
         let request = RequestSyncDevicesRequest {
             agent_user_id: user_id.to_string(),
-            r#async: false,
+            r#async: true,
         };
         self.0.lock().await.request_sync_devices(request).await?;
 
