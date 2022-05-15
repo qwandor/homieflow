@@ -148,7 +148,7 @@ async fn handle_homie_event(
 }
 
 async fn request_sync(user_id: user::ID, home_graph_client: Option<HomeGraphClient>) {
-    if let Some(mut home_graph_client) = home_graph_client {
+    if let Some(home_graph_client) = home_graph_client {
         if let Err(e) = home_graph_client.request_sync(user_id).await {
             tracing::error!("Error requesting sync for {}: {:?}", user_id, e);
         }

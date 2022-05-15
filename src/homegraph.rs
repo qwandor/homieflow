@@ -19,11 +19,12 @@ use google_authz::{Credentials, GoogleAuthz};
 use google_smart_home::query::response;
 use prost_types::{value::Kind, Struct, Value};
 use serde_json::to_value;
-use std::{collections::BTreeMap, error::Error, path::Path};
+use std::{collections::BTreeMap, error::Error, path::Path, sync::Arc};
+use tokio::sync::Mutex;
 use tonic::{transport::Channel, Status};
 
 #[derive(Clone, Debug)]
-pub struct HomeGraphClient(pub HomeGraphApiServiceClient<GoogleAuthz<Channel>>);
+pub struct HomeGraphClient(Arc<Mutex<HomeGraphApiServiceClient<GoogleAuthz<Channel>>>>);
 
 impl HomeGraphClient {
     /// Connects to the Google Home Graph gRPC API server and returns a client which can make calls to
@@ -41,12 +42,14 @@ impl HomeGraphClient {
             .credentials(credentials)
             .build()
             .await;
-        Ok(Self(HomeGraphApiServiceClient::new(channel)))
+        Ok(Self(Arc::new(Mutex::new(HomeGraphApiServiceClient::new(
+            channel,
+        )))))
     }
 
     /// Reports state of the single device with the given ID for the given user.
     pub async fn report_state(
-        &mut self,
+        &self,
         user_id: user::ID,
         device_id: String,
         state: response::State,
@@ -68,18 +71,22 @@ impl HomeGraphClient {
             }),
             ..Default::default()
         };
-        self.0.report_state_and_notification(request).await?;
+        self.0
+            .lock()
+            .await
+            .report_state_and_notification(request)
+            .await?;
 
         Ok(())
     }
 
     /// Requests that Google make a SYNC intent, because devices have been added, removed or changed.
-    pub async fn request_sync(&mut self, user_id: user::ID) -> Result<(), Status> {
+    pub async fn request_sync(&self, user_id: user::ID) -> Result<(), Status> {
         let request = RequestSyncDevicesRequest {
             agent_user_id: user_id.to_string(),
             r#async: false,
         };
-        self.0.request_sync_devices(request).await?;
+        self.0.lock().await.request_sync_devices(request).await?;
 
         Ok(())
     }
