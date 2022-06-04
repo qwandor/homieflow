@@ -128,8 +128,17 @@ async fn handle_homie_event(
             property_id: _,
             has_required_attributes: true,
         } => {
-            tracing::trace!("Homie event {:?}, requesting sync.", event);
-            request_sync.execute();
+            // Only request sync if all devices are ready.
+            if controller
+                .devices()
+                .values()
+                .all(|device| device.has_required_attributes())
+            {
+                tracing::trace!("Homie event {:?}, requesting sync.", event);
+                request_sync.execute();
+            } else {
+                tracing::trace!("Homie event {:?}, not requesting sync.", event);
+            }
         }
         Event::PropertyValueChanged {
             ref device_id,
