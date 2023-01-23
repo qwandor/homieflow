@@ -37,7 +37,7 @@ pub mod serde_token_expiration {
             E: de::Error,
         {
             let v: i64 = v.try_into().map_err(|err| {
-                serde::de::Error::custom(&format!("u64 to i64 cast fail: {}", err))
+                serde::de::Error::custom(format!("u64 to i64 cast fail: {}", err))
             })?;
             self.visit_i64(v)
         }
