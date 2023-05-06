@@ -36,12 +36,10 @@ impl RateLimiter {
         Self { notify, handle }
     }
 
-    /// Calls the callback, either immediately or after waiting enough time.
+    /// Calls the callback after waiting for the period.
     ///
-    /// If the callback has not been called for at least the period of the rate limiter, calls it
-    /// immediately. If it has, then waits until the period has elapsed since the last time it was
-    /// called. If `execute` is called multiple times within the period the callback will still only
-    /// be called once.
+    /// If `execute` is called multiple times within the period the callback will still only be
+    /// called at most twice.
     pub fn execute(&self) {
         self.notify.notify_one();
     }
@@ -60,7 +58,7 @@ async fn callback_run_loop(
 ) {
     loop {
         notify.notified().await;
-        callback().await;
         time::sleep(period).await;
+        callback().await;
     }
 }

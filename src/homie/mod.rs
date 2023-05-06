@@ -132,7 +132,7 @@ async fn handle_homie_event(
             if controller
                 .devices()
                 .values()
-                .all(|device| device.has_required_attributes())
+                .all(|device| device.has_required_attributes() && !device.nodes.is_empty())
             {
                 tracing::trace!("Homie event {:?}, requesting sync.", event);
                 request_sync.execute();
