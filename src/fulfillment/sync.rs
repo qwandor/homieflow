@@ -29,9 +29,27 @@ use homie_controller::Node;
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload, ServerError> {
     if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
-        let devices = homie_devices_to_google_home(&homie_controller.devices());
+        // Return error if some nodes missing required attributes
+        let homie_devices = homie_controller.devices();
+        if !homie_devices
+            .values()
+            .all(|device| device.has_required_attributes())
+        {
+            tracing::warn!(
+                "Returning error for request sync for {} Homie devices.",
+                homie_devices.len()
+            );
+            return Ok(response::Payload {
+                agent_user_id: user_id.to_string(),
+                error_code: Some("offline".to_string()),
+                debug_string: Some("Devices missing required attributes.".to_string()),
+                devices: vec![],
+            });
+        }
 
-        tracing::info!("Synced {} devices", devices.len(),);
+        let devices = homie_devices_to_google_home(&homie_devices);
+
+        tracing::info!("Synced {} devices", devices.len());
 
         Ok(response::Payload {
             agent_user_id: user_id.to_string(),
