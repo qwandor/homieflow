@@ -108,6 +108,8 @@ pub struct Google {
     pub project_id: String,
     /// Credentials JSON file for Report State API.
     pub credentials_file: PathBuf,
+    /// The minimum time between two calls to request sync.
+    pub request_sync_rate_limit_seconds: u64,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -261,6 +263,7 @@ mod tests {
                 client_secret: String::from("google-client-secret"),
                 project_id: String::from("google-project-id"),
                 credentials_file: PathBuf::from_str("google-credentials.json").unwrap(),
+                request_sync_rate_limit_seconds: 600,
             }),
             logins: Logins {
                 google: Some(GoogleLogin {

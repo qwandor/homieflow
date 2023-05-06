@@ -19,6 +19,7 @@ client-id = "google-client-id"
 client-secret = "google-client-secret"
 project-id = "google-project-id"
 credentials-file = "google-credentials.json"
+request-sync-rate-limit-seconds = 600
 
 [logins.google]
 client-id = "google-login-client-id"
