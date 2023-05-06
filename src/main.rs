@@ -25,6 +25,7 @@ use std::io;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::select;
 use tracing::{debug, error, info};
 
@@ -52,11 +53,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     debug!("Config: {:#?}", config);
 
-    let home_graph_client = if let Some(google) = &config.google {
-        Some(HomeGraphClient::connect(&google.credentials_file).await?)
+    let home_graph_client;
+    let request_sync_rate_limit;
+    if let Some(google) = &config.google {
+        home_graph_client = Some(HomeGraphClient::connect(&google.credentials_file).await?);
+        request_sync_rate_limit = Duration::from_secs(google.request_sync_rate_limit_seconds);
     } else {
-        None
-    };
+        home_graph_client = None;
+        // This value doesn't really matter, so just use a high number to avoid wasting time.
+        request_sync_rate_limit = Duration::from_secs(1000);
+    }
     let mut homie_controllers = HashMap::new();
     let mut join_handles = Vec::new();
     let tls_client_config = get_tls_client_config();
@@ -80,6 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 home_graph_client.clone(),
                 user.id,
                 homie_config.reconnect_interval,
+                request_sync_rate_limit,
             );
             join_handles.push(handle);
             homie_controllers.insert(user.id, controller);

@@ -27,8 +27,6 @@ use tokio::{
 };
 
 const KEEP_ALIVE: Duration = Duration::from_secs(5);
-/// The minimum time between two calls to request sync.
-const REQUEST_SYNC_RATE_LIMIT: Duration = Duration::from_secs(10);
 
 pub fn get_mqtt_options(
     config: &Homie,
@@ -56,6 +54,7 @@ pub fn spawn_homie_poller(
     home_graph_client: Option<HomeGraphClient>,
     user_id: user::ID,
     reconnect_interval: Duration,
+    request_sync_rate_limit: Duration,
 ) -> JoinHandle<()> {
     task::spawn(homie_poller(
         controller,
@@ -63,6 +62,7 @@ pub fn spawn_homie_poller(
         home_graph_client,
         user_id,
         reconnect_interval,
+        request_sync_rate_limit,
     ))
 }
 
@@ -72,9 +72,10 @@ async fn homie_poller(
     mut home_graph_client: Option<HomeGraphClient>,
     user_id: user::ID,
     reconnect_interval: Duration,
+    request_sync_rate_limit: Duration,
 ) {
     let home_graph_client_clone = home_graph_client.clone();
-    let request_sync = RateLimiter::new(REQUEST_SYNC_RATE_LIMIT, move || {
+    let request_sync = RateLimiter::new(request_sync_rate_limit, move || {
         Box::pin(request_sync(user_id, home_graph_client_clone.clone()))
     });
 
