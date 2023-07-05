@@ -28,7 +28,7 @@ chrono = { version = "0.4.26", features = ["serde"] }
 tracing = "0.1.26"
 axum = { version = "0.3.4", features = ["ws", "headers"] }
 google-api-proto = { version = "1.64.0", features = ["google-home-graph-v1"] }
-google-authz = { version = "1.0.0-alpha.4", features = ["tonic"] }
+google-authz = { version = "1.0.0-alpha.5", features = ["tonic"] }
 hex = "0.4.3"
 http = "0.2.4"
 hyper = "0.14.11"
