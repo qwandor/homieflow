@@ -39,7 +39,7 @@ axum-server = { version = "0.3.2", features = ["tls-rustls"] }
 homie-controller = "0.5.1"
 jsonwebtoken-google = "0.1.2"
 jsonwebtoken = "7.2.0"
-prost-types = "0.10.1"
+prost-types = "0.12.4"
 rand = "0.8.5"
 regex = "1.5.5"
 rumqttc = "0.10.0"
