@@ -296,12 +296,16 @@ mod tests {
             }]
             .to_vec(),
         };
-        std::env::set_var("REFRESH_KEY", &expected.secrets.refresh_key);
-        std::env::set_var("ACCESS_KEY", &expected.secrets.access_key);
-        std::env::set_var(
-            "AUTHORIZATION_CODE_KEY",
-            &expected.secrets.authorization_code_key,
-        );
+        // SAFETY: This is a test, and no other threads should be accessing the environment
+        // variables.
+        unsafe {
+            std::env::set_var("REFRESH_KEY", &expected.secrets.refresh_key);
+            std::env::set_var("ACCESS_KEY", &expected.secrets.access_key);
+            std::env::set_var(
+                "AUTHORIZATION_CODE_KEY",
+                &expected.secrets.authorization_code_key,
+            );
+        }
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()

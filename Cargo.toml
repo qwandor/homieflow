@@ -7,7 +7,7 @@ authors = ["Andrew Walbran <qwandor@gmail.com>"]
 categories = ["network-programming"]
 keywords = ["iot", "home-automation", "smart-home", "web"]
 license = "GPL-3.0-or-later"
-edition = "2021"
+edition = "2024"
 resolver = "2"
 
 [dependencies]
