@@ -55,7 +55,7 @@ pub async fn handle(
     }
 }
 
-async fn execute_homie_devices<'a>(
+async fn execute_homie_devices(
     controller: &HomieController,
     devices: &HashMap<String, Device>,
     commands: &[request::PayloadCommand],
