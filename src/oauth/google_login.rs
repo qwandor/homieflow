@@ -10,14 +10,14 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+use super::AuthorizationRequestQuery;
 use super::grant_authorization_code;
 use super::verify_oauth_query;
-use super::AuthorizationRequestQuery;
+use crate::State;
 use crate::types::errors::AuthError;
 use crate::types::errors::InternalError;
 use crate::types::errors::OAuthError;
 use crate::types::errors::ServerError;
-use crate::State;
 use axum::body::Body;
 use axum::extract::Extension;
 use axum::extract::Form;

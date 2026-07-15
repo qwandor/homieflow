@@ -12,9 +12,9 @@
 
 use std::collections::HashMap;
 
+use crate::State;
 use crate::types::errors::ServerError;
 use crate::types::user;
-use crate::State;
 use google_smart_home::device::Trait as GHomeDeviceTrait;
 use google_smart_home::device::Type as GHomeDeviceType;
 use google_smart_home::sync::response;

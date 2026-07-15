@@ -11,11 +11,11 @@
 // GNU General Public License for more details.
 
 use super::homie::get_homie_device_by_id;
+use crate::State;
 use crate::homie::state::color_absolute_to_property_value;
 use crate::homie::state::percentage_to_property_value;
 use crate::types::errors::InternalError;
 use crate::types::user;
-use crate::State;
 use google_smart_home::device::Command as GHomeCommand;
 use google_smart_home::execute::request;
 use google_smart_home::execute::request::PayloadCommandDevice;

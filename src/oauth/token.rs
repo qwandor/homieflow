@@ -10,6 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+use crate::State;
 use crate::config::server::Google;
 use crate::types::errors::InternalError;
 use crate::types::errors::OAuthError;
@@ -19,10 +20,9 @@ use crate::types::token::AccessTokenPayload;
 use crate::types::token::AuthorizationCode;
 use crate::types::token::RefreshToken;
 use crate::types::token::RefreshTokenPayload;
-use crate::State;
+use axum::Json;
 use axum::extract::Extension;
 use axum::extract::Form;
-use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
 use serde::Deserialize;

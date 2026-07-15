@@ -15,13 +15,13 @@ use chrono::DateTime;
 use chrono::Utc;
 use jsonwebtoken::dangerous_insecure_decode_with_validation;
 use jsonwebtoken::{
-    dangerous_insecure_decode, decode, encode, Algorithm, DecodingKey, EncodingKey, Header,
-    TokenData, Validation,
+    Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation, dangerous_insecure_decode,
+    decode, encode,
 };
-use serde::de;
-use serde::ser;
 use serde::Deserialize;
 use serde::Serialize;
+use serde::de;
+use serde::ser;
 use uuid::Uuid;
 
 #[derive(Clone, PartialEq)]

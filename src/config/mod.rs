@@ -14,7 +14,7 @@ pub mod defaults;
 pub mod server;
 
 use regex::Regex;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::{
     env::{self, VarError},
     io::{self, Write},

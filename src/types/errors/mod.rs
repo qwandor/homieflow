@@ -21,8 +21,8 @@ pub use oauth::Error as OAuthError;
 pub use token::Error as TokenError;
 
 use axum::body::BoxBody;
-use axum::http::header::WWW_AUTHENTICATE;
 use axum::http::StatusCode;
+use axum::http::header::WWW_AUTHENTICATE;
 use axum::response::Response;
 use serde::Deserialize;
 use serde::Serialize;

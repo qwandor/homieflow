@@ -11,10 +11,10 @@
 // GNU General Public License for more details.
 
 use super::homie::get_homie_device_by_id;
+use crate::State;
 use crate::homie::state::homie_node_to_state;
 use crate::types::errors::InternalError;
 use crate::types::user;
-use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
 use homie_controller::Device;

@@ -15,11 +15,11 @@ mod homie;
 mod query;
 mod sync;
 
+use crate::State;
 use crate::extractors::UserID;
 use crate::types::errors::ServerError;
-use crate::State;
-use axum::extract::Extension;
 use axum::Json;
+use axum::extract::Extension;
 use google_smart_home::Request;
 use google_smart_home::RequestInput;
 use google_smart_home::Response;

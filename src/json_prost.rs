@@ -10,7 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use prost_types::{value::Kind, ListValue, Struct, Value};
+use prost_types::{ListValue, Struct, Value, value::Kind};
 use serde_json::Map;
 
 pub fn json_to_prost_value(value: serde_json::Value) -> Value {

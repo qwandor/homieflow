@@ -12,16 +12,16 @@
 
 use crate::{json_prost::json_to_prost_struct, types::user};
 use google_api_proto::google::home::graph::v1::{
-    home_graph_api_service_client::HomeGraphApiServiceClient, ReportStateAndNotificationDevice,
-    ReportStateAndNotificationRequest, RequestSyncDevicesRequest, StateAndNotificationPayload,
+    ReportStateAndNotificationDevice, ReportStateAndNotificationRequest, RequestSyncDevicesRequest,
+    StateAndNotificationPayload, home_graph_api_service_client::HomeGraphApiServiceClient,
 };
 use google_authz::{Credentials, GoogleAuthz};
 use google_smart_home::query::response;
-use prost_types::{value::Kind, Struct, Value};
+use prost_types::{Struct, Value, value::Kind};
 use serde_json::to_value;
 use std::{collections::BTreeMap, error::Error, path::Path, sync::Arc};
 use tokio::sync::Mutex;
-use tonic::{transport::Channel, Status};
+use tonic::{Status, transport::Channel};
 
 #[derive(Clone, Debug)]
 pub struct HomeGraphClient(Arc<Mutex<HomeGraphApiServiceClient<GoogleAuthz<Channel>>>>);
@@ -102,7 +102,7 @@ fn query_state_to_report_state(state: response::State) -> Struct {
 
 #[cfg(test)]
 mod tests {
-    use prost_types::{value::Kind, Value};
+    use prost_types::{Value, value::Kind};
     use std::collections::BTreeMap;
 
     use super::*;

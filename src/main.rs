@@ -12,9 +12,9 @@
 
 use axum_server::tls_rustls::RustlsConfig;
 use homie_controller::HomieController;
-use homieflow::config::server::Config;
 use homieflow::config::Config as _;
 use homieflow::config::Error as ConfigError;
+use homieflow::config::server::Config;
 use homieflow::homegraph::HomeGraphClient;
 use homieflow::homie::get_mqtt_options;
 use homieflow::homie::spawn_homie_poller;

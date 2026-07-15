@@ -10,6 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+use crate::State;
 use crate::config::server::Secrets;
 use crate::types::errors::AuthError;
 use crate::types::errors::ServerError;
@@ -18,7 +19,6 @@ use crate::types::token::AccessTokenPayload;
 use crate::types::token::RefreshTokenPayload;
 use crate::types::token::Token;
 use crate::types::user;
-use crate::State;
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::header::AUTHORIZATION;

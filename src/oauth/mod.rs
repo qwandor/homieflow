@@ -163,51 +163,59 @@ mod tests {
 
         #[test]
         fn valid() {
-            assert!(verify_redirect_uri(
-                &Url::parse(&format!(
-                    "https://{}/r/{}",
-                    GOOGLE_OAUTH_REDIRECT_URL, PROJECT_ID
-                ))
-                .unwrap(),
-                PROJECT_ID,
-            )
-            .is_ok());
+            assert!(
+                verify_redirect_uri(
+                    &Url::parse(&format!(
+                        "https://{}/r/{}",
+                        GOOGLE_OAUTH_REDIRECT_URL, PROJECT_ID
+                    ))
+                    .unwrap(),
+                    PROJECT_ID,
+                )
+                .is_ok()
+            );
 
-            assert!(verify_redirect_uri(
-                &Url::parse(&format!(
-                    "https://{}/r/{}",
-                    GOOGLE_SANDBOX_OAUTH_REDIRECT_URL, PROJECT_ID
-                ))
-                .unwrap(),
-                PROJECT_ID,
-            )
-            .is_ok());
+            assert!(
+                verify_redirect_uri(
+                    &Url::parse(&format!(
+                        "https://{}/r/{}",
+                        GOOGLE_SANDBOX_OAUTH_REDIRECT_URL, PROJECT_ID
+                    ))
+                    .unwrap(),
+                    PROJECT_ID,
+                )
+                .is_ok()
+            );
         }
 
         #[test]
         fn invalid_project_id() {
-            assert!(verify_redirect_uri(
-                &Url::parse(&format!(
-                    "https://{}/r/{}",
-                    GOOGLE_SANDBOX_OAUTH_REDIRECT_URL, "invalid-project-id"
-                ))
-                .unwrap(),
-                PROJECT_ID,
-            )
-            .is_err());
+            assert!(
+                verify_redirect_uri(
+                    &Url::parse(&format!(
+                        "https://{}/r/{}",
+                        GOOGLE_SANDBOX_OAUTH_REDIRECT_URL, "invalid-project-id"
+                    ))
+                    .unwrap(),
+                    PROJECT_ID,
+                )
+                .is_err()
+            );
         }
 
         #[test]
         fn no_tls() {
-            assert!(verify_redirect_uri(
-                &Url::parse(&format!(
-                    "http://{}/r/{}",
-                    GOOGLE_SANDBOX_OAUTH_REDIRECT_URL, PROJECT_ID
-                ))
-                .unwrap(),
-                PROJECT_ID,
-            )
-            .is_err());
+            assert!(
+                verify_redirect_uri(
+                    &Url::parse(&format!(
+                        "http://{}/r/{}",
+                        GOOGLE_SANDBOX_OAUTH_REDIRECT_URL, PROJECT_ID
+                    ))
+                    .unwrap(),
+                    PROJECT_ID,
+                )
+                .is_err()
+            );
         }
     }
 }

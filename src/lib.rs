@@ -24,14 +24,14 @@ use crate::types::user;
 use axum::body::Body;
 use axum::http::{Request, Response};
 use axum::routing::{get, post};
-use axum::{extract::Extension, Router};
+use axum::{Router, extract::Extension};
 use config::server::Config;
 use homie_controller::HomieController;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tower_http::trace::TraceLayer;
-use tracing::{debug, debug_span, Span};
+use tracing::{Span, debug, debug_span};
 
 async fn health_check() -> &'static str {
     "I'm alive!"

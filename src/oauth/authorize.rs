@@ -10,12 +10,12 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use super::verify_redirect_uri;
 use super::AuthorizationRequestQuery;
+use super::verify_redirect_uri;
+use crate::State;
 use crate::types::errors::InternalError;
 use crate::types::errors::OAuthError;
 use crate::types::errors::ServerError;
-use crate::State;
 use askama::Template;
 use axum::extract::Extension;
 use axum::extract::Query;
