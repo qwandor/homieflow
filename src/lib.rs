@@ -22,7 +22,7 @@ mod types;
 
 use crate::types::user;
 use axum::routing::{get, post};
-use axum::{AddExtensionLayer, Router};
+use axum::{extract::Extension, Router};
 use config::server::Config;
 use homie_controller::HomieController;
 use http::{Request, Response};
@@ -57,7 +57,7 @@ pub fn app(state: State) -> Router<hyper::Body> {
             "/fulfillment",
             Router::new().route("/google-home", post(fulfillment::handle)),
         )
-        .layer(AddExtensionLayer::new(state))
+        .layer(Extension(state))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &Request<Body>| {
@@ -69,8 +69,8 @@ pub fn app(state: State) -> Router<hyper::Body> {
                     )
                 })
                 .on_response(|response: &Response<_>, latency: Duration, span: &Span| {
-                    span.record("status_code", &tracing::field::display(response.status()));
-                    span.record("ms", &tracing::field::display(latency.as_millis()));
+                    span.record("status_code", tracing::field::display(response.status()));
+                    span.record("ms", tracing::field::display(latency.as_millis()));
 
                     debug!("response processed")
                 }),

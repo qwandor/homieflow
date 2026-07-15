@@ -16,11 +16,12 @@ mod oauth;
 mod token;
 
 pub use auth::Error as AuthError;
-use http::header::WWW_AUTHENTICATE;
 pub use internal::Error as InternalError;
 pub use oauth::Error as OAuthError;
 pub use token::Error as TokenError;
 
+use axum::body::BoxBody;
+use http::header::WWW_AUTHENTICATE;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -42,11 +43,7 @@ pub enum ServerError {
 }
 
 impl axum::response::IntoResponse for ServerError {
-    type Body = axum::body::Full<hyper::body::Bytes>;
-
-    type BodyError = <Self::Body as axum::body::HttpBody>::Error;
-
-    fn into_response(self) -> http::Response<Self::Body> {
+    fn into_response(self) -> http::Response<BoxBody> {
         use http::StatusCode;
         let status = match self {
             Self::Validation(_) => StatusCode::BAD_REQUEST,
