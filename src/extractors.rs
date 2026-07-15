@@ -20,7 +20,8 @@ use crate::types::token::Token;
 use crate::types::user;
 use crate::State;
 use async_trait::async_trait;
-use axum::body::Body;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
 use jsonwebtoken::TokenData;
 use serde::de;
 use serde::ser;
@@ -28,13 +29,11 @@ use serde::ser;
 pub struct UserID(pub user::ID);
 
 #[async_trait]
-impl axum::extract::FromRequest<Body> for UserID {
+impl<S: Sync> FromRequestParts<S> for UserID {
     type Rejection = ServerError;
 
-    async fn from_request(
-        req: &mut axum::extract::RequestParts<Body>,
-    ) -> Result<Self, Self::Rejection> {
-        let AccessToken(access_token) = AccessToken::from_request(req).await?;
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let AccessToken(access_token) = AccessToken::from_request_parts(parts, state).await?;
         Ok(Self(access_token.claims.sub))
     }
 }
@@ -44,15 +43,15 @@ pub struct RefreshToken(pub TokenData<RefreshTokenPayload>);
 pub struct AccessToken(pub TokenData<AccessTokenPayload>);
 
 async fn from_request<P>(
-    req: &mut axum::extract::RequestParts<Body>,
+    parts: &mut Parts,
     get_key_fn: impl FnOnce(&Secrets) -> &str,
 ) -> Result<TokenData<P>, AuthError>
 where
     P: ser::Serialize + de::DeserializeOwned,
 {
-    let state: &State = req.extensions().get().unwrap();
-    let header_str = req
-        .headers()
+    let state: &State = parts.extensions.get().unwrap();
+    let header_str = parts
+        .headers
         .get(http::header::AUTHORIZATION)
         .ok_or(TokenError {
             description: "MissingHeader".to_string(),
@@ -75,27 +74,23 @@ where
 }
 
 #[async_trait]
-impl axum::extract::FromRequest<Body> for RefreshToken {
+impl<S> FromRequestParts<S> for RefreshToken {
     type Rejection = ServerError;
 
-    async fn from_request(
-        req: &mut axum::extract::RequestParts<Body>,
-    ) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         Ok(Self(
-            from_request(req, |secrets| &secrets.refresh_key).await?,
+            from_request(parts, |secrets| &secrets.refresh_key).await?,
         ))
     }
 }
 
 #[async_trait]
-impl axum::extract::FromRequest<Body> for AccessToken {
+impl<S> FromRequestParts<S> for AccessToken {
     type Rejection = ServerError;
 
-    async fn from_request(
-        req: &mut axum::extract::RequestParts<Body>,
-    ) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         Ok(Self(
-            from_request(req, |secrets| &secrets.access_key).await?,
+            from_request(parts, |secrets| &secrets.access_key).await?,
         ))
     }
 }

@@ -18,10 +18,12 @@ use crate::types::errors::InternalError;
 use crate::types::errors::OAuthError;
 use crate::types::errors::ServerError;
 use crate::State;
+use axum::body::Body;
 use axum::extract::Extension;
 use axum::extract::Form;
 use axum::extract::Query;
 use axum::extract::TypedHeader;
+use axum::response::Response;
 use headers::Cookie;
 use jsonwebtoken_google::Parser;
 use serde::Deserialize;
@@ -47,10 +49,10 @@ struct TokenClaims {
 #[tracing::instrument(name = "GoogleLogin", skip(state, request, cookies), err)]
 pub async fn handle(
     Extension(state): Extension<State>,
-    Form(request): Form<Request>,
     Query(query): Query<AuthorizationRequestQuery>,
     TypedHeader(cookies): TypedHeader<Cookie>,
-) -> Result<http::Response<axum::body::Body>, ServerError> {
+    Form(request): Form<Request>,
+) -> Result<Response<Body>, ServerError> {
     if request.g_csrf_token != cookies.get("g_csrf_token").unwrap_or("") {
         return Err(AuthError::InvalidCsrfToken.into());
     }

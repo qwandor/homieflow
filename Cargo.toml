@@ -26,13 +26,13 @@ async-trait = "0.1.89"
 url = { version = "2.5.8", features = ["serde"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 tracing = "0.1.44"
-axum = { version = "0.5.17", features = ["ws", "headers"] }
+axum = { version = "0.6.20", features = ["ws", "headers"] }
 google-api-proto = { version = "1.64.0", features = ["google-home-graph-v1"] }
 google-authz = { version = "1.0.0-alpha.5", features = ["tonic"] }
 hex = "0.4.3"
 http = "0.2.4"
-hyper = "0.14.11"
-headers = "0.3.4"
+hyper = "0.14.32"
+headers = "0.3.8"
 toml = "0.7.5"
 tower-http = { version = "0.3.2", features = ["trace"] }
 axum-server = { version = "0.3.2", features = ["tls-rustls"] }

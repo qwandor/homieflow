@@ -43,7 +43,7 @@ pub struct State {
     pub homie_controllers: Arc<HashMap<user::ID, Arc<HomieController>>>,
 }
 
-pub fn app(state: State) -> Router<hyper::Body> {
+pub fn app(state: State) -> Router {
     Router::new()
         .route("/health_check", get(health_check))
         .nest(
