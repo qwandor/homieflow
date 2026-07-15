@@ -19,7 +19,8 @@ use crate::{
     types::user::{self, Homie},
 };
 use homie_controller::{Device, Event, HomieController, HomieEventLoop, Node, PollError};
-use rumqttc::{ClientConfig, ConnectionError, MqttOptions, TlsConfiguration, Transport};
+use rumqttc::{ConnectionError, MqttOptions, TlsConfiguration, Transport};
+use rustls::ClientConfig;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::{
     task::{self, JoinHandle},
@@ -81,17 +82,18 @@ async fn homie_poller(
 
     loop {
         match controller.poll(&mut event_loop).await {
-            Ok(Some(event)) => {
-                handle_homie_event(
-                    controller.as_ref(),
-                    &request_sync,
-                    &mut home_graph_client,
-                    user_id,
-                    event,
-                )
-                .await;
+            Ok(events) => {
+                for event in events {
+                    handle_homie_event(
+                        controller.as_ref(),
+                        &request_sync,
+                        &mut home_graph_client,
+                        user_id,
+                        event,
+                    )
+                    .await;
+                }
             }
-            Ok(None) => {}
             Err(e) => {
                 tracing::error!(
                     "Failed to poll HomieController for base topic '{}': {}",

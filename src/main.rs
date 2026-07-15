@@ -19,6 +19,7 @@ use homieflow::homegraph::HomeGraphClient;
 use homieflow::homie::get_mqtt_options;
 use homieflow::homie::spawn_homie_poller;
 use rustls::ClientConfig;
+use rustls::RootCertStore;
 use std::collections::HashMap;
 use std::env;
 use std::io;
@@ -121,8 +122,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn get_tls_client_config() -> Arc<ClientConfig> {
-    let mut client_config = ClientConfig::new();
-    client_config.root_store =
-        rustls_native_certs::load_native_certs().expect("Failed to load platform certificates.");
+    let mut root_store = RootCertStore::empty();
+    root_store.add_parsable_certificates(
+        &rustls_native_certs::load_native_certs().expect("Failed to load platform certificates."),
+    );
+    let client_config = ClientConfig::builder()
+        .with_safe_defaults()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
     Arc::new(client_config)
 }
