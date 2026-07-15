@@ -33,15 +33,15 @@ impl HomeGraphClient {
         let channel = Channel::from_static("https://homegraph.googleapis.com")
             .connect()
             .await?;
-        let credentials = Credentials::builder()
+        let credentials = Credentials::new()
             .json_file(credentials_file)
             .scopes(&["https://www.googleapis.com/auth/homegraph"])
-            .build()
+            .init()
             .await?;
-        let channel = GoogleAuthz::builder(channel)
+        let channel = GoogleAuthz::new(channel)
             .credentials(credentials)
-            .build()
-            .await;
+            .init()
+            .await?;
         Ok(Self(Arc::new(Mutex::new(HomeGraphApiServiceClient::new(
             channel,
         )))))

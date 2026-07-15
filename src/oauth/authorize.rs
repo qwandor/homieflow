@@ -19,7 +19,6 @@ use crate::types::errors::ServerError;
 use askama::Template;
 use axum::extract::Extension;
 use axum::extract::Query;
-use axum::http::HeaderMap;
 use axum::response::Html;
 use url::Url;
 
@@ -37,7 +36,6 @@ struct AuthorizeTemplate {
 pub async fn handle(
     Extension(state): Extension<State>,
     Query(request): Query<AuthorizationRequestQuery>,
-    headers: HeaderMap,
 ) -> Result<Html<String>, ServerError> {
     let google_config = state
         .config

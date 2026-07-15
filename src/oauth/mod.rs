@@ -128,7 +128,7 @@ fn grant_authorization_code(
     query: AuthorizationRequestQuery,
     user_id: UserID,
     secrets: &Secrets,
-) -> Result<Response<Body>, TokenError> {
+) -> Result<Response, TokenError> {
     let authorization_code_payload = AuthorizationCodePayload {
         sub: user_id,
         exp: Utc::now() + Duration::minutes(10),
