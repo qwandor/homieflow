@@ -39,6 +39,7 @@ impl axum::extract::FromRequest<Body> for UserID {
     }
 }
 
+#[allow(unused)]
 pub struct RefreshToken(pub TokenData<RefreshTokenPayload>);
 pub struct AccessToken(pub TokenData<AccessTokenPayload>);
 
