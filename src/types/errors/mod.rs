@@ -21,7 +21,9 @@ pub use oauth::Error as OAuthError;
 pub use token::Error as TokenError;
 
 use axum::body::BoxBody;
-use http::header::WWW_AUTHENTICATE;
+use axum::http::header::WWW_AUTHENTICATE;
+use axum::http::StatusCode;
+use axum::response::Response;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -43,8 +45,7 @@ pub enum ServerError {
 }
 
 impl axum::response::IntoResponse for ServerError {
-    fn into_response(self) -> http::Response<BoxBody> {
-        use http::StatusCode;
+    fn into_response(self) -> Response<BoxBody> {
         let status = match self {
             Self::Validation(_) => StatusCode::BAD_REQUEST,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,

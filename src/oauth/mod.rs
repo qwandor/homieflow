@@ -21,6 +21,9 @@ use crate::types::errors::TokenError;
 use crate::types::token::AuthorizationCode;
 use crate::types::token::AuthorizationCodePayload;
 use crate::types::user::ID as UserID;
+use axum::body::Body;
+use axum::http::StatusCode;
+use axum::response::Response;
 use chrono::Duration;
 use chrono::Utc;
 use serde::Deserialize;
@@ -125,7 +128,7 @@ fn grant_authorization_code(
     query: AuthorizationRequestQuery,
     user_id: UserID,
     secrets: &Secrets,
-) -> Result<http::Response<axum::body::Body>, TokenError> {
+) -> Result<Response<Body>, TokenError> {
     let authorization_code_payload = AuthorizationCodePayload {
         sub: user_id,
         exp: Utc::now() + Duration::minutes(10),
@@ -142,10 +145,10 @@ fn grant_authorization_code(
 
     tracing::info!(%user_id, "Authorization code granted");
 
-    Ok(http::Response::builder()
-        .status(http::StatusCode::SEE_OTHER)
+    Ok(Response::builder()
+        .status(StatusCode::SEE_OTHER)
         .header("Location", redirect_uri.to_string())
-        .body(axum::body::Body::empty())
+        .body(Body::empty())
         .unwrap())
 }
 

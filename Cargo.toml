@@ -30,8 +30,6 @@ axum = { version = "0.6.20", features = ["ws", "headers"] }
 google-api-proto = { version = "1.64.0", features = ["google-home-graph-v1"] }
 google-authz = { version = "1.0.0-alpha.5", features = ["tonic"] }
 hex = "0.4.3"
-http = "0.2.4"
-hyper = "0.14.32"
 headers = "0.3.8"
 toml = "0.7.5"
 tower-http = { version = "0.3.2", features = ["trace"] }
@@ -66,9 +64,21 @@ section = "net"
 maintainer-scripts = "debian-scripts"
 conf-files = ["/etc/homieflow.toml"]
 assets = [
-	["target/release/homieflow", "usr/bin/", "755"],
-	["example.toml", "etc/homieflow.toml", "640"],
-	["README.md", "usr/share/doc/homieflow/", "644"],
+    [
+        "target/release/homieflow",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "example.toml",
+        "etc/homieflow.toml",
+        "640",
+    ],
+    [
+        "README.md",
+        "usr/share/doc/homieflow/",
+        "644",
+    ],
 ]
 
 # This section needs to be here even if it's empty, for the systemd integration to work.

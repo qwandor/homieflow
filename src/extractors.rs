@@ -21,6 +21,7 @@ use crate::types::user;
 use crate::State;
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
+use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
 use jsonwebtoken::TokenData;
 use serde::de;
@@ -52,7 +53,7 @@ where
     let state: &State = parts.extensions.get().unwrap();
     let header_str = parts
         .headers
-        .get(http::header::AUTHORIZATION)
+        .get(AUTHORIZATION)
         .ok_or(TokenError {
             description: "MissingHeader".to_string(),
         })?

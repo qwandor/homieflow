@@ -21,12 +21,12 @@ mod ratelimit;
 mod types;
 
 use crate::types::user;
+use axum::body::Body;
+use axum::http::{Request, Response};
 use axum::routing::{get, post};
 use axum::{extract::Extension, Router};
 use config::server::Config;
 use homie_controller::HomieController;
-use http::{Request, Response};
-use hyper::Body;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;

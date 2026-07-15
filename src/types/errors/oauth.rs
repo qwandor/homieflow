@@ -10,7 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-use http::HeaderValue;
+use axum::http::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::to_value;

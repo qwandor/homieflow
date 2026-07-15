@@ -770,8 +770,6 @@ dependencies = [
  "headers",
  "hex",
  "homie-controller",
- "http",
- "hyper",
  "jsonwebtoken 7.2.0",
  "jsonwebtoken-google",
  "prost-types",

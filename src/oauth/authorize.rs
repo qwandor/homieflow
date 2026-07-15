@@ -19,8 +19,8 @@ use crate::State;
 use askama::Template;
 use axum::extract::Extension;
 use axum::extract::Query;
+use axum::http::HeaderMap;
 use axum::response::Html;
-use http::HeaderMap;
 use url::Url;
 
 #[derive(Template)]
