@@ -50,10 +50,9 @@ async fn from_request<P>(
 where
     P: ser::Serialize + de::DeserializeOwned,
 {
-    let state: &State = req.extensions().unwrap().get().unwrap();
+    let state: &State = req.extensions().get().unwrap();
     let header_str = req
         .headers()
-        .unwrap()
         .get(http::header::AUTHORIZATION)
         .ok_or(TokenError {
             description: "MissingHeader".to_string(),
