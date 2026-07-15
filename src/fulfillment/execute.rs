@@ -84,26 +84,25 @@ async fn execute_homie_device(
         // TODO: Check if device is offline?
         match &execution.command {
             GHomeCommand::OnOff(onoff) => {
-                if let Some(on) = node.properties.get("on") {
-                    if on.datatype == Some(Datatype::Boolean) {
-                        return set_value(controller, device, node, "on", onoff.on, ids).await;
-                    }
+                if let Some(on) = node.properties.get("on")
+                    && on.datatype == Some(Datatype::Boolean)
+                {
+                    return set_value(controller, device, node, "on", onoff.on, ids).await;
                 }
             }
             GHomeCommand::BrightnessAbsolute(brightness_absolute) => {
-                if let Some(brightness) = node.properties.get("brightness") {
-                    if let Some(value) =
+                if let Some(brightness) = node.properties.get("brightness")
+                    && let Some(value) =
                         percentage_to_property_value(brightness, brightness_absolute.brightness)
-                    {
-                        return set_value(controller, device, node, "brightness", value, ids).await;
-                    }
+                {
+                    return set_value(controller, device, node, "brightness", value, ids).await;
                 }
             }
             GHomeCommand::ColorAbsolute(color_absolute) => {
-                if let Some(color) = node.properties.get("color") {
-                    if let Some(value) = color_absolute_to_property_value(color, color_absolute) {
-                        return set_value(controller, device, node, "color", value, ids).await;
-                    }
+                if let Some(color) = node.properties.get("color")
+                    && let Some(value) = color_absolute_to_property_value(color, color_absolute)
+                {
+                    return set_value(controller, device, node, "color", value, ids).await;
                 }
             }
             _ => {}

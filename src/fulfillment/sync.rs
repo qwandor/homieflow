@@ -94,16 +94,16 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
         }
         traits.push(GHomeDeviceTrait::Brightness);
     }
-    if let Some(color) = node.properties.get("color") {
-        if let Ok(color_format) = color.color_format() {
-            let color_model = match color_format {
-                ColorFormat::Rgb => ColorModel::Rgb,
-                ColorFormat::Hsv => ColorModel::Hsv,
-            };
-            device_type = Some(GHomeDeviceType::Light);
-            traits.push(GHomeDeviceTrait::ColorSetting);
-            attributes.color_model = Some(color_model);
-        }
+    if let Some(color) = node.properties.get("color")
+        && let Ok(color_format) = color.color_format()
+    {
+        let color_model = match color_format {
+            ColorFormat::Rgb => ColorModel::Rgb,
+            ColorFormat::Hsv => ColorModel::Hsv,
+        };
+        device_type = Some(GHomeDeviceType::Light);
+        traits.push(GHomeDeviceTrait::ColorSetting);
+        attributes.color_model = Some(color_model);
     }
     if node.properties.contains_key("temperature") {
         device_type = Some(GHomeDeviceType::Thermostat);

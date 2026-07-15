@@ -160,10 +160,10 @@ async fn handle_homie_event(
 }
 
 async fn request_sync(user_id: user::ID, home_graph_client: Option<HomeGraphClient>) {
-    if let Some(home_graph_client) = home_graph_client {
-        if let Err(e) = home_graph_client.request_sync(user_id).await {
-            tracing::error!("Error requesting sync for {}: {:?}", user_id, e);
-        }
+    if let Some(home_graph_client) = home_graph_client
+        && let Err(e) = home_graph_client.request_sync(user_id).await
+    {
+        tracing::error!("Error requesting sync for {}: {:?}", user_id, e);
     }
 }
 
@@ -200,10 +200,10 @@ pub fn get_homie_node<'a>(
     device_id: &str,
     node_id: &str,
 ) -> Option<(&'a Device, &'a Node)> {
-    if let Some(device) = devices.get(device_id) {
-        if let Some(node) = device.nodes.get(node_id) {
-            return Some((device, node));
-        }
+    if let Some(device) = devices.get(device_id)
+        && let Some(node) = device.nodes.get(node_id)
+    {
+        return Some((device, node));
     }
     None
 }
