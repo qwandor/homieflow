@@ -80,8 +80,8 @@ pub trait Config: DeserializeOwned + Serialize {
 
     fn default_path() -> PathBuf {
         xdg::BaseDirectories::with_prefix("homieflow")
-            .unwrap()
             .get_config_home()
+            .unwrap()
             .join(Self::DEFAULT_FILE)
     }
 }
