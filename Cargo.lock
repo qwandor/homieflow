@@ -768,7 +768,7 @@ dependencies = [
  "rand",
  "regex",
  "rumqttc",
- "rustls 0.19.1",
+ "rustls 0.20.9",
  "rustls-native-certs 0.5.0",
  "semver",
  "serde",
