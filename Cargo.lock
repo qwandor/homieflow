@@ -505,6 +505,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "flume"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da0e4dd2a88388a1f4ccc7c9ce104604dab68d9f408dc34cd45823d5a9069095"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "spin 0.9.9",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -779,7 +790,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2f0067e961b18c10112bf855eec85ad70c9313cf86778b5cb2544bfee90a0f6"
 dependencies = [
  "log",
- "rumqttc",
+ "rumqttc 0.22.0",
  "thiserror 1.0.69",
 ]
 
@@ -803,7 +814,7 @@ dependencies = [
  "prost-types",
  "rand 0.10.2",
  "regex",
- "rumqttc",
+ "rumqttc 0.23.0",
  "rustls 0.21.12",
  "rustls-native-certs",
  "semver",
@@ -1702,12 +1713,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2433b134712bc17a6f85a35e06b901e6e8d0bb20b5367e1121e6fedc140c0ac"
 dependencies = [
  "bytes",
- "flume",
+ "flume 0.10.14",
  "futures",
  "log",
  "rustls-native-certs",
  "rustls-pemfile",
  "rustls-webpki 0.100.3",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-rustls 0.24.1",
+]
+
+[[package]]
+name = "rumqttc"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d8941c6791801b667d52bfe9ff4fc7c968d4f3f9ae8ae7abdaaa1c966feafc8"
+dependencies = [
+ "bytes",
+ "flume 0.11.1",
+ "futures-util",
+ "log",
+ "rustls-native-certs",
+ "rustls-pemfile",
+ "rustls-webpki 0.101.7",
  "thiserror 1.0.69",
  "tokio",
  "tokio-rustls 0.24.1",
