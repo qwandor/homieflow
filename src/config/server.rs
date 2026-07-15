@@ -11,6 +11,8 @@
 // GNU General Public License for more details.
 
 use super::defaults;
+use rand::distr::Distribution;
+use rand::distr::StandardUniform;
 use serde::Deserialize;
 use serde::Serialize;
 use std::path::PathBuf;
@@ -168,7 +170,7 @@ impl super::Config for Config {
     }
 }
 
-impl rand::distributions::Distribution<Secrets> for rand::distributions::Standard {
+impl Distribution<Secrets> for StandardUniform {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Secrets {
         let mut gen_secret = || {
             let mut bytes = [0; 32];

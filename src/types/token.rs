@@ -153,10 +153,11 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
 mod tests {
     use super::*;
     use chrono::SubsecRound;
+    use rand::Rng;
+
     fn get_key() -> Vec<u8> {
-        use rand::RngCore;
         let mut bytes = [0; 32];
-        rand::thread_rng().fill_bytes(&mut bytes);
+        rand::rng().fill_bytes(&mut bytes);
 
         Vec::from(bytes)
     }
