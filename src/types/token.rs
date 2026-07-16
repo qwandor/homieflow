@@ -14,7 +14,7 @@ use super::errors::TokenError as Error;
 use chrono::DateTime;
 use chrono::Utc;
 use jsonwebtoken::{
-    Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation, dangerous_insecure_decode,
+    Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation, dangerous::insecure_decode,
     decode, encode,
 };
 use serde::Deserialize;
@@ -111,11 +111,10 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     /// Validate the signature, and the expiry if it is present.
     pub fn decode(key: &[u8], token: &str) -> Result<TokenData<P>, Error> {
         // Hack to allow tokens without "exp", but validate it if it is present.
-        let unvalidated_data: TokenData<BasePayload> = dangerous_insecure_decode(token)?;
-        let validation = Validation {
-            validate_exp: unvalidated_data.claims.exp.is_some(),
-            ..Validation::default()
-        };
+        let unvalidated_data: TokenData<BasePayload> = insecure_decode(token)?;
+        let mut validation = Validation::default();
+        validation.validate_exp = unvalidated_data.claims.exp.is_some();
+        validation.required_spec_claims.remove("exp");
 
         Ok(decode(token, &DecodingKey::from_secret(key), &validation)?)
     }
