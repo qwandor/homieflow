@@ -19,7 +19,6 @@ use crate::types::token::AccessTokenPayload;
 use crate::types::token::RefreshTokenPayload;
 use crate::types::token::Token;
 use crate::types::user;
-use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
@@ -29,7 +28,6 @@ use serde::ser;
 
 pub struct UserID(pub user::ID);
 
-#[async_trait]
 impl<S: Sync> FromRequestParts<S> for UserID {
     type Rejection = ServerError;
 
@@ -74,8 +72,7 @@ where
     )?)
 }
 
-#[async_trait]
-impl<S> FromRequestParts<S> for RefreshToken {
+impl<S: Sync> FromRequestParts<S> for RefreshToken {
     type Rejection = ServerError;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
@@ -85,8 +82,7 @@ impl<S> FromRequestParts<S> for RefreshToken {
     }
 }
 
-#[async_trait]
-impl<S> FromRequestParts<S> for AccessToken {
+impl<S: Sync> FromRequestParts<S> for AccessToken {
     type Rejection = ServerError;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
