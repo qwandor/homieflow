@@ -20,6 +20,7 @@ use homieflow::homie::get_mqtt_options;
 use homieflow::homie::spawn_homie_poller;
 use rustls::ClientConfig;
 use rustls::RootCertStore;
+use rustls::crypto::aws_lc_rs::default_provider;
 use std::collections::HashMap;
 use std::env;
 use std::io;
@@ -53,6 +54,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => panic!("Config error: {}", err),
     };
     debug!("Config: {:#?}", config);
+
+    default_provider()
+        .install_default()
+        .expect("Failed to install default crypto provider");
 
     let home_graph_client;
     let request_sync_rate_limit;
