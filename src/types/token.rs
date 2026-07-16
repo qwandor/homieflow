@@ -13,7 +13,6 @@
 use super::errors::TokenError as Error;
 use chrono::DateTime;
 use chrono::Utc;
-use jsonwebtoken::dangerous_insecure_decode_with_validation;
 use jsonwebtoken::{
     Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation, dangerous_insecure_decode,
     decode, encode,
@@ -107,33 +106,6 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
 
     pub fn encode(&self) -> String {
         self.encoded.clone()
-    }
-
-    /// Validate the expiry (if it is present) but not the signature.
-    pub fn decode_unsafe(token: &str) -> Result<Self, Error> {
-        // Hack to allow tokens without "exp", but validate it if it is present.
-        let unvalidated_data: TokenData<BasePayload> = dangerous_insecure_decode(token)?;
-        let validation = Validation {
-            validate_exp: unvalidated_data.claims.exp.is_some(),
-            ..Validation::default()
-        };
-
-        let data = dangerous_insecure_decode_with_validation(token, &validation)?;
-        Ok(Self {
-            header: data.header,
-            payload: data.claims,
-            encoded: token.to_owned(),
-        })
-    }
-
-    /// Don't validate anything.
-    pub fn decode_unsafe_novalidate(token: &str) -> Result<Self, Error> {
-        let data = dangerous_insecure_decode(token)?;
-        Ok(Self {
-            header: data.header,
-            payload: data.claims,
-            encoded: token.to_owned(),
-        })
     }
 
     /// Validate the signature, and the expiry if it is present.
