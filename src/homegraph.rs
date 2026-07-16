@@ -21,7 +21,10 @@ use prost_types::{Struct, Value, value::Kind};
 use serde_json::to_value;
 use std::{collections::BTreeMap, error::Error, path::Path, sync::Arc};
 use tokio::sync::Mutex;
-use tonic::{Status, transport::Channel};
+use tonic::{
+    Status,
+    transport::{Channel, ClientTlsConfig},
+};
 
 #[derive(Clone, Debug)]
 pub struct HomeGraphClient(Arc<Mutex<HomeGraphApiServiceClient<GoogleAuthz<Channel>>>>);
@@ -31,6 +34,8 @@ impl HomeGraphClient {
     /// the API.
     pub async fn connect(credentials_file: &Path) -> Result<Self, Box<dyn Error>> {
         let channel = Channel::from_static("https://homegraph.googleapis.com")
+            .tls_config(ClientTlsConfig::new().with_enabled_roots())
+            .unwrap()
             .connect()
             .await?;
         let credentials = Credentials::new()
