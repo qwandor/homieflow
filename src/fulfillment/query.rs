@@ -297,8 +297,11 @@ mod tests {
                 error_code: None,
                 state: response::State {
                     online: true,
+                    active_thermostat_mode: Some("none".to_owned()),
+                    thermostat_mode: Some("off".to_owned()),
                     thermostat_temperature_ambient: Some(21.3),
                     thermostat_humidity_ambient: Some(27.0),
+                    humidity_ambient_percent: Some(27),
                     ..Default::default()
                 },
             }

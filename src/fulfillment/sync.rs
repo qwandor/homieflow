@@ -20,7 +20,9 @@ use google_smart_home::device::Type as GHomeDeviceType;
 use google_smart_home::sync::response;
 use google_smart_home::sync::response::Attributes;
 use google_smart_home::sync::response::ColorModel;
+use google_smart_home::sync::response::NumericCapabilities;
 use google_smart_home::sync::response::PayloadDevice;
+use google_smart_home::sync::response::SensorStatesSupported;
 use google_smart_home::sync::response::ThermostatTemperatureUnit;
 use homie_controller::ColorFormat;
 use homie_controller::Device;
@@ -106,12 +108,52 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
         attributes.color_model = Some(color_model);
     }
     if node.properties.contains_key("temperature") {
-        device_type = Some(GHomeDeviceType::Thermostat);
+        device_type = Some(GHomeDeviceType::Sensor);
         traits.push(GHomeDeviceTrait::TemperatureSetting);
         attributes.available_thermostat_modes = Some(vec!["off".to_string()]);
         attributes.thermostat_temperature_unit = Some(ThermostatTemperatureUnit::C);
         attributes.query_only_temperature_setting = Some(true);
     }
+    if node.properties.contains_key("humidity") {
+        device_type = Some(GHomeDeviceType::Sensor);
+        traits.push(GHomeDeviceTrait::HumiditySetting);
+        attributes.query_only_humidity_setting = Some(true);
+    }
+    if node.properties.contains_key("pressure") {
+        device_type = Some(GHomeDeviceType::Sensor);
+        traits.push(GHomeDeviceTrait::SensorState);
+        attributes
+            .sensor_states_supported
+            .get_or_insert_default()
+            .push(SensorStatesSupported {
+                name: "Pressure".to_owned(),
+                descriptive_capabilities: None,
+                numeric_capabilities: Some(NumericCapabilities {
+                    raw_value_unit: "KPA".to_owned(),
+                }),
+            });
+    }
+    if node.properties.contains_key("light") {
+        device_type = Some(GHomeDeviceType::Sensor);
+        traits.push(GHomeDeviceTrait::SensorState);
+        attributes
+            .sensor_states_supported
+            .get_or_insert_default()
+            .push(SensorStatesSupported {
+                name: "LightLevel".to_owned(),
+                descriptive_capabilities: None,
+                numeric_capabilities: Some(NumericCapabilities {
+                    raw_value_unit: "LUX".to_owned(),
+                }),
+            });
+    }
+    if node.properties.contains_key("battery") {
+        traits.push(GHomeDeviceTrait::EnergyStorage);
+        attributes.query_only_energy_storage = Some(true);
+    }
+
+    traits.sort();
+    traits.dedup();
 
     let device_name = device.name.clone().unwrap_or_else(|| device.id.clone());
     let node_name = node.name.clone().unwrap_or_else(|| node.id.clone());
@@ -138,7 +180,6 @@ fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevi
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use homie_controller::{Datatype, Property, State};
 
     #[test]
@@ -196,7 +237,7 @@ mod tests {
             PayloadDevice {
                 id: "device/node".to_string(),
                 device_type: GHomeDeviceType::Light,
-                traits: vec![GHomeDeviceTrait::OnOff, GHomeDeviceTrait::Brightness],
+                traits: vec![GHomeDeviceTrait::Brightness, GHomeDeviceTrait::OnOff],
                 name: response::PayloadDeviceName {
                     default_names: None,
                     name: "Device name Node name".to_string(),
@@ -268,7 +309,7 @@ mod tests {
             PayloadDevice {
                 id: "device/node".to_string(),
                 device_type: GHomeDeviceType::Light,
-                traits: vec![GHomeDeviceTrait::OnOff, GHomeDeviceTrait::ColorSetting],
+                traits: vec![GHomeDeviceTrait::ColorSetting, GHomeDeviceTrait::OnOff],
                 name: response::PayloadDeviceName {
                     default_names: None,
                     name: "Device name Node name".to_string(),
@@ -342,8 +383,11 @@ mod tests {
             homie_node_to_google_home(&device, &device.nodes.get("node").unwrap()).unwrap(),
             PayloadDevice {
                 id: "device/node".to_string(),
-                device_type: GHomeDeviceType::Thermostat,
-                traits: vec![GHomeDeviceTrait::TemperatureSetting],
+                device_type: GHomeDeviceType::Sensor,
+                traits: vec![
+                    GHomeDeviceTrait::HumiditySetting,
+                    GHomeDeviceTrait::TemperatureSetting
+                ],
                 name: response::PayloadDeviceName {
                     default_names: None,
                     name: "Device name Node name".to_string(),
@@ -357,6 +401,7 @@ mod tests {
                     available_thermostat_modes: Some(vec!["off".to_string()]),
                     thermostat_temperature_unit: Some(ThermostatTemperatureUnit::C),
                     query_only_temperature_setting: Some(true),
+                    query_only_humidity_setting: Some(true),
                     ..Attributes::default()
                 },
                 custom_data: None,
