@@ -51,6 +51,7 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
 
         let devices = homie_devices_to_google_home(&homie_devices);
 
+        tracing::trace!("Devices: {}", serde_json::to_string(&devices).unwrap());
         tracing::info!("Synced {} devices", devices.len());
 
         Ok(response::Payload {

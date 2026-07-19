@@ -88,6 +88,8 @@ pub fn homie_node_to_state(node: &Node, online: bool) -> response::State {
         }
     }
 
+    tracing::trace!("State: {}", serde_json::to_string(&state).unwrap());
+
     state
 }
 
