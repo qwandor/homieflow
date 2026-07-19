@@ -846,7 +846,7 @@ dependencies = [
  "hex",
  "homie-controller",
  "jsonwebtoken",
- "jsonwebtoken-google",
+ "jsonwebtoken-google2",
  "prost-types",
  "rand 0.10.2",
  "regex",
@@ -1245,9 +1245,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "jsonwebtoken-google"
-version = "0.1.6"
-source = "git+https://github.com/qwandor/jsonwebtoken-google#4c443f667b1c718b5724e50543d3ed2901150018"
+name = "jsonwebtoken-google2"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f7cdd2c621e3ff25e920f672698ae2e73a2086c933819cc43a3912b72c02e88"
 dependencies = [
  "headers",
  "jsonwebtoken",
