@@ -47,45 +47,44 @@ pub fn homie_node_to_state(node: &Node, online: bool) -> response::State {
             state.humidity_ambient_percent = Some(percentage.clamp(0, 100) as u8);
         }
     }
-    if let Some(pressure) = node.properties.get("pressure") {
-        if let Some(pressure_pa) = property_value_to_number(pressure) {
-            state
-                .current_sensor_state_data
-                .get_or_insert_default()
-                .push(CurrentSensorStateData {
-                    name: "Pressure".to_owned(),
-                    current_sensor_state: None,
-                    raw_value: Some(pressure_pa / 1000.0),
-                    alarm_state: None,
-                    alarm_silence_state: None,
-                });
-        }
+    if let Some(pressure) = node.properties.get("pressure")
+        && let Some(pressure_pa) = property_value_to_number(pressure)
+    {
+        state
+            .current_sensor_state_data
+            .get_or_insert_default()
+            .push(CurrentSensorStateData {
+                name: "Pressure".to_owned(),
+                current_sensor_state: None,
+                raw_value: Some(pressure_pa / 1000.0),
+                alarm_state: None,
+                alarm_silence_state: None,
+            });
     }
-    if let Some(light) = node.properties.get("light") {
-        if let Some(light) = property_value_to_number(light) {
-            // TODO: Convert to Lux rather than percentage
-            state
-                .current_sensor_state_data
-                .get_or_insert_default()
-                .push(CurrentSensorStateData {
-                    name: "LightLevel".to_owned(),
-                    current_sensor_state: None,
-                    raw_value: Some(light),
-                    alarm_state: None,
-                    alarm_silence_state: None,
-                });
-        }
+    if let Some(light) = node.properties.get("light")
+        && let Some(light) = property_value_to_number(light)
+    {
+        // TODO: Convert to Lux rather than percentage
+        state
+            .current_sensor_state_data
+            .get_or_insert_default()
+            .push(CurrentSensorStateData {
+                name: "LightLevel".to_owned(),
+                current_sensor_state: None,
+                raw_value: Some(light),
+                alarm_state: None,
+                alarm_silence_state: None,
+            });
     }
-    if let Some(battery) = node.properties.get("battery") {
-        if let Some(percentage) = property_value_to_i64(battery) {
-            let percentage = percentage.clamp(0, 100) as u8;
-            state.descriptive_capacity_remaining =
-                Some(battery_percentage_to_descriptive(percentage));
-            state.capacity_remaining = Some(vec![Capacity {
-                raw_value: percentage.into(),
-                unit: response::CapacityUnit::Percentage,
-            }]);
-        }
+    if let Some(battery) = node.properties.get("battery")
+        && let Some(percentage) = property_value_to_i64(battery)
+    {
+        let percentage = percentage.clamp(0, 100) as u8;
+        state.descriptive_capacity_remaining = Some(battery_percentage_to_descriptive(percentage));
+        state.capacity_remaining = Some(vec![Capacity {
+            raw_value: percentage.into(),
+            unit: response::CapacityUnit::Percentage,
+        }]);
     }
 
     tracing::trace!("State: {}", serde_json::to_string(&state).unwrap());
