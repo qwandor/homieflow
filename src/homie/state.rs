@@ -14,7 +14,9 @@
 
 use google_smart_home::{
     device::commands::{ColorAbsolute, ColorValue},
-    query::response::{self, Color},
+    query::response::{
+        self, Capacity, Color, CurrentSensorStateData, DescriptiveCapacityRemaining,
+    },
 };
 use homie_controller::{ColorFormat, ColorHsv, ColorRgb, Datatype, Node, Property};
 use std::ops::RangeInclusive;
@@ -35,17 +37,73 @@ pub fn homie_node_to_state(node: &Node, online: bool) -> response::State {
         state.color = property_value_to_color(color);
     }
     if let Some(temperature) = node.properties.get("temperature") {
+        state.active_thermostat_mode = Some("none".to_owned());
+        state.thermostat_mode = Some("off".to_owned());
         state.thermostat_temperature_ambient = property_value_to_number(temperature);
     }
     if let Some(humidity) = node.properties.get("humidity") {
         state.thermostat_humidity_ambient = property_value_to_number(humidity);
+        if let Some(percentage) = property_value_to_i64(humidity) {
+            state.humidity_ambient_percent = Some(percentage.clamp(0, 100) as u8);
+        }
     }
+    if let Some(pressure) = node.properties.get("pressure")
+        && let Some(pressure_pa) = property_value_to_number(pressure)
+    {
+        state
+            .current_sensor_state_data
+            .get_or_insert_default()
+            .push(CurrentSensorStateData {
+                name: "Pressure".to_owned(),
+                current_sensor_state: None,
+                raw_value: Some(pressure_pa / 1000.0),
+                alarm_state: None,
+                alarm_silence_state: None,
+            });
+    }
+    if let Some(light) = node.properties.get("light")
+        && let Some(light) = property_value_to_number(light)
+    {
+        // TODO: Convert to Lux rather than percentage
+        state
+            .current_sensor_state_data
+            .get_or_insert_default()
+            .push(CurrentSensorStateData {
+                name: "LightLevel".to_owned(),
+                current_sensor_state: None,
+                raw_value: Some(light),
+                alarm_state: None,
+                alarm_silence_state: None,
+            });
+    }
+    if let Some(battery) = node.properties.get("battery")
+        && let Some(percentage) = property_value_to_i64(battery)
+    {
+        let percentage = percentage.clamp(0, 100) as u8;
+        state.descriptive_capacity_remaining = Some(battery_percentage_to_descriptive(percentage));
+        state.capacity_remaining = Some(vec![Capacity {
+            raw_value: percentage.into(),
+            unit: response::CapacityUnit::Percentage,
+        }]);
+    }
+
+    tracing::trace!("State: {}", serde_json::to_string(&state).unwrap());
 
     state
 }
 
+fn battery_percentage_to_descriptive(percentage: u8) -> DescriptiveCapacityRemaining {
+    match percentage {
+        0..10 => DescriptiveCapacityRemaining::CriticallyLow,
+        10..40 => DescriptiveCapacityRemaining::Low,
+        40..70 => DescriptiveCapacityRemaining::Medium,
+        70..90 => DescriptiveCapacityRemaining::High,
+        90.. => DescriptiveCapacityRemaining::Full,
+    }
+}
+
 /// Scales the value of the given property to a percentage.
-pub fn property_value_to_percentage(property: &Property) -> Option<u8> {
+fn property_value_to_percentage(property: &Property) -> Option<u8> {
     match property.datatype? {
         Datatype::Integer => {
             let value: i64 = property.value().ok()?;
@@ -93,6 +151,20 @@ pub fn property_value_to_number(property: &Property) -> Option<f64> {
         Datatype::Float => {
             let value = property.value().ok()?;
             Some(value)
+        }
+        _ => None,
+    }
+}
+
+pub fn property_value_to_i64(property: &Property) -> Option<i64> {
+    match property.datatype? {
+        Datatype::Integer => {
+            let value = property.value().ok()?;
+            Some(value)
+        }
+        Datatype::Float => {
+            let value: f64 = property.value().ok()?;
+            Some(value as i64)
         }
         _ => None,
     }
