@@ -53,6 +53,7 @@ impl HomeGraphClient {
     }
 
     /// Reports state of the single device with the given ID for the given user.
+    #[allow(clippy::result_large_err)]
     pub async fn report_state(
         &self,
         user_id: user::ID,
@@ -86,6 +87,7 @@ impl HomeGraphClient {
     }
 
     /// Requests that Google make a SYNC intent, because devices have been added, removed or changed.
+    #[allow(clippy::result_large_err)]
     pub async fn request_sync(&self, user_id: user::ID) -> Result<(), Status> {
         let request = RequestSyncDevicesRequest {
             agent_user_id: user_id.to_string(),
