@@ -112,8 +112,10 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     pub fn decode(key: &[u8], token: &str) -> Result<TokenData<P>, Error> {
         // Hack to allow tokens without "exp", but validate it if it is present.
         let unvalidated_data: TokenData<BasePayload> = insecure_decode(token)?;
-        let mut validation = Validation::default();
-        validation.validate_exp = unvalidated_data.claims.exp.is_some();
+        let mut validation = Validation {
+            validate_exp: unvalidated_data.claims.exp.is_some(),
+            ..Default::default()
+        };
         validation.required_spec_claims.remove("exp");
 
         Ok(decode(token, &DecodingKey::from_secret(key), &validation)?)
