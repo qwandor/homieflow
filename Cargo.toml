@@ -36,7 +36,7 @@ toml = "1.1.6"
 tower-http = { version = "0.7.1", features = ["trace"] }
 axum-server = { version = "0.8.0", features = ["tls-rustls"] }
 homie-controller = "0.11.0"
-jsonwebtoken-google = { version = "0.2.1", package = "jsonwebtoken-google2" }
+jsonwebtoken-google = { version = "0.3.0", package = "jsonwebtoken-google2" }
 jsonwebtoken = { version = "11.1.0", features = ["aws_lc_rs"] }
 prost-types = "0.13.3"
 rand = "0.10.3"

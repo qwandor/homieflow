@@ -1263,12 +1263,12 @@ dependencies = [
 
 [[package]]
 name = "jsonwebtoken-google2"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f7cdd2c621e3ff25e920f672698ae2e73a2086c933819cc43a3912b72c02e88"
+checksum = "bf9bcb6bcdd14b413745f6542005bbf085d76c3fe2e9a0a439181003dfe62a14"
 dependencies = [
  "headers",
- "jsonwebtoken 10.4.0",
+ "jsonwebtoken 11.1.0",
  "reqwest",
  "rsa",
  "rustls",
