@@ -18,6 +18,8 @@ use homieflow::config::server::Config;
 use homieflow::homegraph::HomeGraphClient;
 use homieflow::homie::get_mqtt_options;
 use homieflow::homie::spawn_homie_poller;
+use jsonwebtoken::crypto::CryptoProvider;
+use jsonwebtoken::crypto::aws_lc::DEFAULT_PROVIDER;
 use rustls::ClientConfig;
 use rustls::RootCertStore;
 use rustls::crypto::aws_lc_rs::default_provider;
@@ -54,6 +56,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => panic!("Config error: {}", err),
     };
     debug!("Config: {:#?}", config);
+
+    CryptoProvider::install_default(&DEFAULT_PROVIDER)
+        .expect("Failed to install default crypto provider for jsonwebtoken");
 
     default_provider()
         .install_default()
